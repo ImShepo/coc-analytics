@@ -1,0 +1,3 @@
+class ClanCapital {
+  ClanCapital();
+}

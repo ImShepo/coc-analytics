@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>732642728426-leb04t0kgm481vfg620sev5p25ain7h8.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.732642728426-leb04t0kgm481vfg620sev5p25ain7h8</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>732642728426-i8oqc57i9l5jahvas13q27o3vm9fv4al.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBtrzYvWf6iBs_dLGrMOSUgRp_5eGww31c</string>
+	<key>GCM_SENDER_ID</key>
+	<string>732642728426</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.imshepo.coc</string>
+	<key>PROJECT_ID</key>
+	<string>clash-of-clans-2fd27</string>
+	<key>STORAGE_BUCKET</key>
+	<string>clash-of-clans-2fd27.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:732642728426:ios:0c7ba12870c3730ff1fa93</string>
+</dict>
+</plist>

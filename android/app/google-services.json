@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "732642728426",
+    "project_id": "clash-of-clans-2fd27",
+    "storage_bucket": "clash-of-clans-2fd27.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:732642728426:android:7e647cc5efeb02acf1fa93",
+        "android_client_info": {
+          "package_name": "com.imshepo.coc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "732642728426-i8oqc57i9l5jahvas13q27o3vm9fv4al.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.imshepo.coc",
+            "certificate_hash": "aabc0473a75f07fe4636384446fb3138c31907d5"
+          }
+        },
+        {
+          "client_id": "732642728426-9oprc6fh4ukvep1t4urb0l777jegp4ef.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhK6ENepppeum79cACs1Bzth9JOa6-qm8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "732642728426-9oprc6fh4ukvep1t4urb0l777jegp4ef.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
