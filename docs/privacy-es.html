@@ -11,7 +11,16 @@
   <header class="site-header">
     <div class="wrap">
       <a class="brand" href="index.html">CoC Analytics</a>
-      <nav class="nav" aria-label="Principal">
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-label="Abrir menú"
+        aria-expanded="false"
+        aria-controls="site-nav"
+      >
+        <span class="nav-toggle-bars" aria-hidden="true"></span>
+      </button>
+      <nav class="nav" id="site-nav" aria-label="Principal">
         <a href="index.html">Inicio</a>
         <a href="privacy.html">Privacy (EN)</a>
         <a href="privacy-es.html" aria-current="page">Privacidad</a>
@@ -154,5 +163,6 @@
       <div class="disclaimer">No afiliada, respaldada ni patrocinada por Supercell.</div>
     </div>
   </footer>
+  <script src="nav.js"></script>
 </body>
 </html>
