@@ -19,6 +19,7 @@ After a minute, open:
 
 - Home: `https://imshepo.github.io/coc-analytics/`
 - Privacy: `https://imshepo.github.io/coc-analytics/privacy.html`
+- Account deletion (Play Console): `https://imshepo.github.io/coc-analytics/delete-account.html`
 
 ## Keep Play Console in sync
 
