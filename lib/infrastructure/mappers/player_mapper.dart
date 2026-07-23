@@ -131,5 +131,6 @@ class PlayerMapper {
         maxLevel: cast.maxLevel,
         village: cast.village,
         equipment: cast.equipment?.map(heroEquipmentToEntity).toList(),
+        superTroopIsActive: cast.superTroopIsActive,
       );
 }

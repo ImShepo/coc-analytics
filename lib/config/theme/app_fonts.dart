@@ -9,23 +9,23 @@ abstract final class AppFonts {
     Shadow(color: Color(0xCC000000), blurRadius: 6, offset: Offset(0, 1)),
   ];
 
-  /// Section headers on the mint-green background (natural font outline).
+  /// Section headers on the mint-green background — open/outline face.
   static TextStyle sectionTitle({double fontSize = 12}) {
     return TextStyle(
-      fontFamily: primary,
+      fontFamily: light,
       color: const Color(0xFF3B3B3B),
       fontSize: fontSize,
       fontWeight: FontWeight.w500,
     );
   }
 
-  /// Labels inside white cards — solid color, no outline/shadow stacking.
+  /// Labels and body copy inside white cards — solid filled face for readability.
   static TextStyle cardLabel({
     double fontSize = 11,
     double? height,
   }) {
     return TextStyle(
-      fontFamily: light,
+      fontFamily: primary,
       color: const Color(0xFF5C5C5C),
       fontSize: fontSize,
       height: height,
@@ -40,7 +40,7 @@ abstract final class AppFonts {
     TextAlign? textAlign,
   }) {
     return TextStyle(
-      fontFamily: light,
+      fontFamily: primary,
       color: const Color(0xFF3B3B3B),
       fontSize: fontSize,
       height: height ?? 1.35,
@@ -54,7 +54,7 @@ abstract final class AppFonts {
     double? height,
   }) {
     return TextStyle(
-      fontFamily: light,
+      fontFamily: primary,
       color: const Color(0xFF5C5C5C),
       fontSize: fontSize,
       height: height ?? 1.35,

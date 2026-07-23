@@ -26,6 +26,7 @@ class LiquidGlassSurface extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final Color? tintColor;
   final double tintStrength;
+  final bool enableBlur;
 
   const LiquidGlassSurface({
     super.key,
@@ -35,6 +36,7 @@ class LiquidGlassSurface extends StatelessWidget {
     this.padding = EdgeInsets.zero,
     this.tintColor,
     this.tintStrength = 0.72,
+    this.enableBlur = true,
   });
 
   List<Color> get _gradientColors {
@@ -76,16 +78,20 @@ class LiquidGlassSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-      child: DecoratedBox(
-        decoration: _decoration,
-        child: Padding(
-          padding: padding,
-          child: child,
-        ),
+    final decorated = DecoratedBox(
+      decoration: _decoration,
+      child: Padding(
+        padding: padding,
+        child: child,
       ),
     );
+
+    final content = enableBlur
+        ? BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: decorated,
+          )
+        : decorated;
 
     if (circular) {
       return ClipOval(child: content);
@@ -109,6 +115,7 @@ class GlassButton extends StatelessWidget {
   final BorderRadius borderRadius;
   final EdgeInsetsGeometry padding;
   final bool selected;
+  final bool enableBlur;
 
   const GlassButton({
     super.key,
@@ -121,6 +128,7 @@ class GlassButton extends StatelessWidget {
     this.borderRadius = const BorderRadius.all(Radius.circular(24)),
     this.padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     this.selected = false,
+    this.enableBlur = true,
   });
 
   const GlassButton.compact({
@@ -133,7 +141,8 @@ class GlassButton extends StatelessWidget {
   })  : expanded = false,
         height = 38,
         borderRadius = const BorderRadius.all(Radius.circular(14)),
-        padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8);
+        padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        enableBlur = true;
 
   @override
   Widget build(BuildContext context) {
@@ -147,6 +156,7 @@ class GlassButton extends StatelessWidget {
       tintColor: colors.tint,
       tintStrength: colors.tintStrength,
       padding: padding,
+      enableBlur: enableBlur,
       child: Row(
         mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -274,6 +284,7 @@ class GlassChipButton extends StatelessWidget {
       style: selected ? GlassButtonStyle.primary : GlassButtonStyle.light,
       height: 34,
       borderRadius: BorderRadius.circular(18),
+      enableBlur: false,
       padding: EdgeInsets.symmetric(
         horizontal: icon != null ? 12 : 14,
         vertical: 6,
@@ -301,10 +312,10 @@ _GlassColors _resolveColors(ColorScheme scheme, GlassButtonStyle style) {
         tintStrength: 0.82,
         foreground: Colors.white,
       ),
-    GlassButtonStyle.light => _GlassColors(
+    GlassButtonStyle.light => const _GlassColors(
         tint: Colors.white,
         tintStrength: 0.55,
-        foreground: const Color(0xFF3B3B3B),
+        foreground: Color(0xFF3B3B3B),
       ),
     GlassButtonStyle.ghostOnDark => _GlassColors(
         tint: null,

@@ -239,6 +239,288 @@ abstract class AppLocalizations {
   /// **'Ingresar'**
   String get signInButton;
 
+  /// No description provided for @createAccountButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear cuenta'**
+  String get createAccountButton;
+
+  /// No description provided for @signingIn.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresando…'**
+  String get signingIn;
+
+  /// No description provided for @signingUp.
+  ///
+  /// In es, this message translates to:
+  /// **'Creando cuenta…'**
+  String get signingUp;
+
+  /// No description provided for @authFieldsRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Completa todos los campos.'**
+  String get authFieldsRequired;
+
+  /// No description provided for @signOutButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrar sesión'**
+  String get signOutButton;
+
+  /// No description provided for @signOutConfirmMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Seguro que quieres cerrar sesión?'**
+  String get signOutConfirmMessage;
+
+  /// No description provided for @accountMenuTooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuenta'**
+  String get accountMenuTooltip;
+
+  /// No description provided for @unlinkPlayerButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Desvincular jugador'**
+  String get unlinkPlayerButton;
+
+  /// No description provided for @unlinkPlayerTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Desvincular jugador'**
+  String get unlinkPlayerTitle;
+
+  /// No description provided for @unlinkPlayerMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Se quitará el vínculo con tu jugador de Clash of Clans. Podrás vincular otra etiqueta después.'**
+  String get unlinkPlayerMessage;
+
+  /// No description provided for @cancel.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelar'**
+  String get cancel;
+
+  /// No description provided for @linkPlayerTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Vincula tu jugador'**
+  String get linkPlayerTitle;
+
+  /// No description provided for @linkPlayerSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce tu etiqueta de jugador de Clash of Clans para cargar tus estadísticas. Si no juegas, puedes continuar sin vincular.'**
+  String get linkPlayerSubtitle;
+
+  /// No description provided for @linkPlayerAltHelp.
+  ///
+  /// In es, this message translates to:
+  /// **'¿No tienes el juego instalado? Busca tu clan, elige tu nombre y verifica con el API Token. Si no juegas, puedes continuar sin vincular.'**
+  String get linkPlayerAltHelp;
+
+  /// No description provided for @linkPlayerTagPlaceholder.
+  ///
+  /// In es, this message translates to:
+  /// **'Etiqueta del jugador (#ABC123)'**
+  String get linkPlayerTagPlaceholder;
+
+  /// No description provided for @linkPlayerTagRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce tu etiqueta de jugador.'**
+  String get linkPlayerTagRequired;
+
+  /// No description provided for @linkPlayerTagHelp.
+  ///
+  /// In es, this message translates to:
+  /// **'En Clash of Clans:\nAbre tu perfil (ícono de tu aldea), ve a «Mi perfil» y copia la etiqueta que aparece debajo de tu nombre.'**
+  String get linkPlayerTagHelp;
+
+  /// No description provided for @linkPlayerTokenPlaceholder.
+  ///
+  /// In es, this message translates to:
+  /// **'API Token'**
+  String get linkPlayerTokenPlaceholder;
+
+  /// No description provided for @linkPlayerTokenRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce el API Token del juego.'**
+  String get linkPlayerTokenRequired;
+
+  /// No description provided for @linkPlayerTokenHelp.
+  ///
+  /// In es, this message translates to:
+  /// **'En Clash of Clans:\nVe a Ajustes → Más ajustes, busca la sección «API Token» y toca «SHOW» para verlo y copiarlo.'**
+  String get linkPlayerTokenHelp;
+
+  /// No description provided for @linkPlayerSeeGuide.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver guía'**
+  String get linkPlayerSeeGuide;
+
+  /// No description provided for @linkPlayerTokenInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'El API Token no es válido para esta etiqueta. Genera uno nuevo en el juego e inténtalo de nuevo.'**
+  String get linkPlayerTokenInvalid;
+
+  /// No description provided for @linkPlayerPickMemberFirst.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige primero tu jugador en la lista.'**
+  String get linkPlayerPickMemberFirst;
+
+  /// No description provided for @linkPlayerVerifySelected.
+  ///
+  /// In es, this message translates to:
+  /// **'Verifica a {name} ({tag})'**
+  String linkPlayerVerifySelected(String name, String tag);
+
+  /// No description provided for @linkPlayerButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Verificar y vincular'**
+  String get linkPlayerButton;
+
+  /// No description provided for @linkingPlayer.
+  ///
+  /// In es, this message translates to:
+  /// **'Verificando…'**
+  String get linkingPlayer;
+
+  /// No description provided for @linkPlayerSkip.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar sin vincular'**
+  String get linkPlayerSkip;
+
+  /// No description provided for @guestHomeUnlinkedTag.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin vincular'**
+  String get guestHomeUnlinkedTag;
+
+  /// No description provided for @guestHomeLinkCta.
+  ///
+  /// In es, this message translates to:
+  /// **'Vincular mi jugador'**
+  String get guestHomeLinkCta;
+
+  /// No description provided for @guestHomeStatsHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Vincula tu jugador para ver tus estadísticas.'**
+  String get guestHomeStatsHint;
+
+  /// No description provided for @guestHomeCompareHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Vincula tu jugador para comparar con otros.'**
+  String get guestHomeCompareHint;
+
+  /// No description provided for @guestHomeClanHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Vincula tu jugador para ver tu clan.'**
+  String get guestHomeClanHint;
+
+  /// No description provided for @guestHomeCategoriesHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Vincula tu jugador para ver tropas, héroes y más.'**
+  String get guestHomeCategoriesHint;
+
+  /// No description provided for @linkPlayerModeTag.
+  ///
+  /// In es, this message translates to:
+  /// **'Por etiqueta'**
+  String get linkPlayerModeTag;
+
+  /// No description provided for @linkPlayerModeClan.
+  ///
+  /// In es, this message translates to:
+  /// **'Por clan'**
+  String get linkPlayerModeClan;
+
+  /// No description provided for @linkPlayerSearchClan.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar clan'**
+  String get linkPlayerSearchClan;
+
+  /// No description provided for @linkPlayerClanQueryHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Por nombre: al menos 3 letras. Por tag: incluye el # (ej. #2GQYGPLOC).'**
+  String get linkPlayerClanQueryHint;
+
+  /// No description provided for @linkPlayerPickClan.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige tu clan'**
+  String get linkPlayerPickClan;
+
+  /// No description provided for @linkPlayerClanCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} clanes'**
+  String linkPlayerClanCount(int count);
+
+  /// No description provided for @linkPlayerMemberCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} jugadores'**
+  String linkPlayerMemberCount(int count);
+
+  /// No description provided for @linkPlayerPickMember.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige tu jugador'**
+  String get linkPlayerPickMember;
+
+  /// No description provided for @linkPlayerLookupOnline.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar etiqueta en línea'**
+  String get linkPlayerLookupOnline;
+
+  /// No description provided for @browseHomeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Explorar'**
+  String get browseHomeTitle;
+
+  /// No description provided for @browseHomeSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Busca clanes o consulta cualquier jugador. Vincula el tuyo cuando quieras para ver tus estadísticas.'**
+  String get browseHomeSubtitle;
+
+  /// No description provided for @browseLookupPlayerTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Consultar jugador'**
+  String get browseLookupPlayerTitle;
+
+  /// No description provided for @browseLookupPlayerButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver jugador'**
+  String get browseLookupPlayerButton;
+
+  /// No description provided for @browseLinkPlayerCta.
+  ///
+  /// In es, this message translates to:
+  /// **'Vincular mi jugador'**
+  String get browseLinkPlayerCta;
+
   /// No description provided for @termsAndConditions.
   ///
   /// In es, this message translates to:
@@ -257,11 +539,83 @@ abstract class AppLocalizations {
   /// **'Reintentar'**
   String get retry;
 
+  /// No description provided for @dataRefreshing.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizando datos…'**
+  String get dataRefreshing;
+
+  /// No description provided for @dataUpdatedJustNow.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizado hace un momento'**
+  String get dataUpdatedJustNow;
+
+  /// No description provided for @dataUpdatedAgo.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizado hace {minutes} min'**
+  String dataUpdatedAgo(int minutes);
+
+  /// No description provided for @dataRefreshFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo actualizar. Mostrando datos guardados.'**
+  String get dataRefreshFailed;
+
   /// No description provided for @playerErrorForbiddenHint.
   ///
   /// In es, this message translates to:
   /// **'Si ves \"Forbidden\", actualiza COC_KEY en el archivo .env con una API key válida de developer.clashofclans.com'**
   String get playerErrorForbiddenHint;
+
+  /// No description provided for @apiErrorPlayerNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'No encontramos un jugador con ese tag. Revisa que esté bien escrito.'**
+  String get apiErrorPlayerNotFound;
+
+  /// No description provided for @apiErrorBadRequest.
+  ///
+  /// In es, this message translates to:
+  /// **'La consulta no es válida. Revisa el tag e inténtalo de nuevo.'**
+  String get apiErrorBadRequest;
+
+  /// No description provided for @apiErrorUnauthorized.
+  ///
+  /// In es, this message translates to:
+  /// **'No autorizado. Revisa la configuración de la API.'**
+  String get apiErrorUnauthorized;
+
+  /// No description provided for @apiErrorForbidden.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso denegado. Revisa tu API key en el archivo .env.'**
+  String get apiErrorForbidden;
+
+  /// No description provided for @apiErrorRateLimited.
+  ///
+  /// In es, this message translates to:
+  /// **'Demasiadas consultas. Espera un momento e inténtalo de nuevo.'**
+  String get apiErrorRateLimited;
+
+  /// No description provided for @apiErrorServer.
+  ///
+  /// In es, this message translates to:
+  /// **'El servidor no responde. Inténtalo más tarde.'**
+  String get apiErrorServer;
+
+  /// No description provided for @apiErrorNetwork.
+  ///
+  /// In es, this message translates to:
+  /// **'Error de conexión. Revisa tu internet.'**
+  String get apiErrorNetwork;
+
+  /// No description provided for @apiErrorUnexpected.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocurrió un error inesperado. Inténtalo de nuevo.'**
+  String get apiErrorUnexpected;
 
   /// No description provided for @yourStats.
   ///
@@ -371,6 +725,30 @@ abstract class AppLocalizations {
   /// **'Equipamiento'**
   String get equipment;
 
+  /// No description provided for @superTroopActive.
+  ///
+  /// In es, this message translates to:
+  /// **'Súper activa'**
+  String get superTroopActive;
+
+  /// No description provided for @superTroopActiveBadge.
+  ///
+  /// In es, this message translates to:
+  /// **'SÚPER'**
+  String get superTroopActiveBadge;
+
+  /// No description provided for @levelPerUnit.
+  ///
+  /// In es, this message translates to:
+  /// **'Nivel por unidad'**
+  String get levelPerUnit;
+
+  /// No description provided for @noUnitsToCompare.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay unidades en común para comparar.'**
+  String get noUnitsToCompare;
+
   /// No description provided for @troopsInProfile.
   ///
   /// In es, this message translates to:
@@ -418,6 +796,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No puedes compararte contigo mismo'**
   String get compareSelfError;
+
+  /// No description provided for @compareRecentSearches.
+  ///
+  /// In es, this message translates to:
+  /// **'Búsquedas recientes'**
+  String get compareRecentSearches;
+
+  /// No description provided for @compareClearRecent.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar'**
+  String get compareClearRecent;
+
+  /// No description provided for @compareNoRecentMatches.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin coincidencias en el historial'**
+  String get compareNoRecentMatches;
 
   /// No description provided for @opponentDefaultName.
   ///
@@ -791,11 +1187,95 @@ abstract class AppLocalizations {
   /// **'Temporada actual'**
   String get currentSeason;
 
+  /// No description provided for @previousSeason.
+  ///
+  /// In es, this message translates to:
+  /// **'Temporada anterior'**
+  String get previousSeason;
+
   /// No description provided for @bestSeason.
   ///
   /// In es, this message translates to:
   /// **'Mejor temporada'**
   String get bestSeason;
+
+  /// No description provided for @playerLabels.
+  ///
+  /// In es, this message translates to:
+  /// **'Etiquetas'**
+  String get playerLabels;
+
+  /// No description provided for @equippedEquipment.
+  ///
+  /// In es, this message translates to:
+  /// **'Equipamiento equipado'**
+  String get equippedEquipment;
+
+  /// No description provided for @warResultWin.
+  ///
+  /// In es, this message translates to:
+  /// **'Victoria'**
+  String get warResultWin;
+
+  /// No description provided for @warResultLose.
+  ///
+  /// In es, this message translates to:
+  /// **'Derrota'**
+  String get warResultLose;
+
+  /// No description provided for @warResultTie.
+  ///
+  /// In es, this message translates to:
+  /// **'Empate'**
+  String get warResultTie;
+
+  /// No description provided for @warLogEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay guerras recientes en el registro.'**
+  String get warLogEmpty;
+
+  /// No description provided for @warLogLoadError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cargar el registro de guerra.'**
+  String get warLogLoadError;
+
+  /// No description provided for @capitalRaidsEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay asaltos recientes al capital.'**
+  String get capitalRaidsEmpty;
+
+  /// No description provided for @capitalRaidsLoadError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cargar el historial de asaltos.'**
+  String get capitalRaidsLoadError;
+
+  /// No description provided for @capitalRaidLoot.
+  ///
+  /// In es, this message translates to:
+  /// **'Botín total'**
+  String get capitalRaidLoot;
+
+  /// No description provided for @capitalRaidRaids.
+  ///
+  /// In es, this message translates to:
+  /// **'Asaltos'**
+  String get capitalRaidRaids;
+
+  /// No description provided for @capitalRaidAttacks.
+  ///
+  /// In es, this message translates to:
+  /// **'Ataques'**
+  String get capitalRaidAttacks;
+
+  /// No description provided for @capitalRaidDistricts.
+  ///
+  /// In es, this message translates to:
+  /// **'Distritos enemigos'**
+  String get capitalRaidDistricts;
 
   /// No description provided for @achievementsHomeVillage.
   ///
@@ -892,6 +1372,78 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Tipo'**
   String get clanType;
+
+  /// No description provided for @familyFriendly.
+  ///
+  /// In es, this message translates to:
+  /// **'Apto para familias'**
+  String get familyFriendly;
+
+  /// No description provided for @familyFriendlyYes.
+  ///
+  /// In es, this message translates to:
+  /// **'Sí'**
+  String get familyFriendlyYes;
+
+  /// No description provided for @familyFriendlyNo.
+  ///
+  /// In es, this message translates to:
+  /// **'No'**
+  String get familyFriendlyNo;
+
+  /// No description provided for @playerHouse.
+  ///
+  /// In es, this message translates to:
+  /// **'Casa del jugador'**
+  String get playerHouse;
+
+  /// No description provided for @playerHouseEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin piezas de casa configuradas.'**
+  String get playerHouseEmpty;
+
+  /// No description provided for @houseTypeGround.
+  ///
+  /// In es, this message translates to:
+  /// **'Suelo'**
+  String get houseTypeGround;
+
+  /// No description provided for @houseTypeRoof.
+  ///
+  /// In es, this message translates to:
+  /// **'Techo'**
+  String get houseTypeRoof;
+
+  /// No description provided for @houseTypeWalls.
+  ///
+  /// In es, this message translates to:
+  /// **'Paredes'**
+  String get houseTypeWalls;
+
+  /// No description provided for @houseTypeDecoration.
+  ///
+  /// In es, this message translates to:
+  /// **'Decoración'**
+  String get houseTypeDecoration;
+
+  /// No description provided for @houseTypeFoot.
+  ///
+  /// In es, this message translates to:
+  /// **'Base'**
+  String get houseTypeFoot;
+
+  /// No description provided for @houseTypeUnknown.
+  ///
+  /// In es, this message translates to:
+  /// **'Pieza'**
+  String get houseTypeUnknown;
+
+  /// No description provided for @houseElementId.
+  ///
+  /// In es, this message translates to:
+  /// **'ID {id}'**
+  String houseElementId(int id);
 
   /// No description provided for @requiredTrophies.
   ///
@@ -1184,7 +1736,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchClanQueryHint.
   ///
   /// In es, this message translates to:
-  /// **'Nombre o tag del clan'**
+  /// **'Nombre o tag con # (ej. #2GQYGPLOC)'**
   String get searchClanQueryHint;
 
   /// No description provided for @comparePlayersPromo.
@@ -1390,6 +1942,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Liga de capital'**
   String get capitalLeagueLabel;
+
+  /// No description provided for @capitalHallLevelLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Nivel del Capital Hall'**
+  String get capitalHallLevelLabel;
+
+  /// No description provided for @capitalDistrictsLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Distritos'**
+  String get capitalDistrictsLabel;
 
   /// No description provided for @clanLevelLabel.
   ///

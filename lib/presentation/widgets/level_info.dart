@@ -1,6 +1,7 @@
 import 'package:coc/config/helpers/human_formats.dart';
 import 'package:coc/config/theme/app_fonts.dart';
 import 'package:coc/l10n/locale_extensions.dart';
+import 'package:coc/presentation/widgets/coc_network_image.dart';
 import 'package:flutter/material.dart';
 
 class LevelInfo extends StatelessWidget {
@@ -9,6 +10,8 @@ class LevelInfo extends StatelessWidget {
   final String levelText;
   final String leagueText;
   final String leagueImagePath;
+  final String leagueImageUrl;
+  final bool showAsLeague;
 
   const LevelInfo({
     super.key,
@@ -16,10 +19,15 @@ class LevelInfo extends StatelessWidget {
     required this.imagePath,
     required this.levelText,
     required this.leagueText,
-    required this.leagueImagePath,
+    this.leagueImagePath = '',
+    this.leagueImageUrl = '',
+    this.showAsLeague = false,
   });
 
-  static TextStyle _labelStyle({required double fontSize, required double letterSpacing}) {
+  static TextStyle _labelStyle({
+    required double fontSize,
+    required double letterSpacing,
+  }) {
     return TextStyle(
       fontFamily: AppFonts.primary,
       color: Colors.white,
@@ -30,10 +38,13 @@ class LevelInfo extends StatelessWidget {
     );
   }
 
+  bool get _isLeague =>
+      showAsLeague || leagueImageUrl.isNotEmpty || leagueImagePath.isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isLeague = leagueImagePath.isNotEmpty;
+    final isLeague = _isLeague;
     final l10n = context.l10n;
     final secondaryLabel = isLeague ? l10n.league : l10n.contributions;
     final secondaryValue = isLeague
@@ -138,16 +149,30 @@ class LevelInfo extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 6),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(
-                    leagueImagePath,
+                if (leagueImageUrl.isNotEmpty) ...[
+                  const SizedBox(width: 6),
+                  CocNetworkImage(
+                    url: leagueImageUrl,
                     width: 28,
                     height: 28,
                     fit: BoxFit.cover,
+                    cacheWidth: 56,
+                    fadeIn: false,
+                    animatedPlaceholder: false,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ),
+                ] else if (leagueImagePath.isNotEmpty) ...[
+                  const SizedBox(width: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      leagueImagePath,
+                      width: 28,
+                      height: 28,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ],
               ],
             ),
         ],

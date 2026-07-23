@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Smooth shimmer + resource-dot animation while network images load.
-class CocImageLoadingPlaceholder extends StatefulWidget {
+/// Soft static placeholder while network images load.
+class CocImageLoadingPlaceholder extends StatelessWidget {
   final double? width;
   final double? height;
   final BorderRadius borderRadius;
@@ -12,31 +12,8 @@ class CocImageLoadingPlaceholder extends StatefulWidget {
     this.width,
     this.height,
     this.borderRadius = const BorderRadius.all(Radius.circular(6)),
-    this.animated = true,
-  });
-
-  bool get _isCompact {
-    final w = width;
-    final h = height;
-    if (w != null && w <= 36) return true;
-    if (h != null && h <= 36) return true;
-    return false;
-  }
-
-  @override
-  State<CocImageLoadingPlaceholder> createState() =>
-      _CocImageLoadingPlaceholderState();
-}
-
-class _StaticLoadingPlaceholder extends StatelessWidget {
-  final double? width;
-  final double? height;
-  final BorderRadius borderRadius;
-
-  const _StaticLoadingPlaceholder({
-    this.width,
-    this.height,
-    this.borderRadius = const BorderRadius.all(Radius.circular(6)),
+    // Kept for call-site compatibility; animation removed on purpose.
+    this.animated = false,
   });
 
   @override
@@ -46,154 +23,18 @@ class _StaticLoadingPlaceholder extends StatelessWidget {
     return ClipRRect(
       borderRadius: borderRadius,
       clipBehavior: Clip.hardEdge,
-      child: Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          borderRadius: borderRadius,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFFE9F2E8),
-              colorScheme.secondary.withValues(alpha: 0.55),
-              const Color(0xFFF8F0E6),
-            ],
-          ),
-        ),
+      child: ColoredBox(
+        color: colorScheme.secondary.withValues(alpha: 0.28),
+        child: SizedBox(width: width, height: height),
       ),
     );
   }
 }
 
-class _CocImageLoadingPlaceholderState extends State<CocImageLoadingPlaceholder>
-    with SingleTickerProviderStateMixin {
-  AnimationController? _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    if (!widget.animated) return;
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1300),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!widget.animated) {
-      return _StaticLoadingPlaceholder(
-        width: widget.width,
-        height: widget.height,
-        borderRadius: widget.borderRadius,
-      );
-    }
-
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return AnimatedBuilder(
-      animation: _controller!,
-      builder: (context, _) {
-        final shimmer = _controller!.value;
-
-        return ClipRRect(
-          borderRadius: widget.borderRadius,
-          clipBehavior: Clip.hardEdge,
-          child: Container(
-            width: widget.width,
-            height: widget.height,
-            decoration: BoxDecoration(
-              borderRadius: widget.borderRadius,
-              gradient: LinearGradient(
-                begin: Alignment(-1.2 + shimmer * 2.4, -0.4),
-                end: Alignment(-0.2 + shimmer * 2.4, 0.4),
-                colors: [
-                  const Color(0xFFE9F2E8),
-                  colorScheme.secondary.withValues(alpha: 0.55),
-                  const Color(0xFFF8F0E6),
-                  const Color(0xFFE9F2E8),
-                ],
-                stops: const [0.0, 0.42, 0.58, 1.0],
-              ),
-            ),
-            alignment: Alignment.center,
-            child: widget._isCompact
-                ? null
-                : _ResourceDotsLoader(
-                    progress: _controller!.value,
-                    maxHeight: widget.height,
-                  ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _ResourceDotsLoader extends StatelessWidget {
-  final double progress;
-  final double? maxHeight;
-
-  const _ResourceDotsLoader({
-    required this.progress,
-    this.maxHeight,
-  });
-
-  static const _colors = [
-    Color(0xFFF5C842),
-    Color(0xFF6BBF59),
-    Color(0xFFB565D8),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final dotSize = (maxHeight != null && maxHeight! <= 20) ? 5.0 : 7.0;
-    final bounceScale = (maxHeight != null && maxHeight! <= 20) ? 0.35 : 0.55;
-
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(_colors.length, (index) {
-          final phase = (progress + index * 0.22) % 1.0;
-          final bounce = (1 - (phase * 2 - 1).abs()) * bounceScale;
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Transform.translate(
-              offset: Offset(0, -bounce * dotSize * 0.9),
-              child: Container(
-                width: dotSize,
-                height: dotSize,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _colors[index].withValues(alpha: 0.88),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _colors[index].withValues(alpha: 0.35),
-                      blurRadius: 2,
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-}
-
-/// Network image with animated placeholder and soft fade-in when ready.
+/// Network image that avoids load flicker:
+/// - memory-cached images paint immediately (no placeholder flash)
+/// - first load shows a static fill until the first frame, then stays
+/// - no fade / pulse / loadingBuilder swaps
 class CocNetworkImage extends StatefulWidget {
   final String url;
   final double? width;
@@ -220,8 +61,8 @@ class CocNetworkImage extends StatefulWidget {
     this.filterQuality = FilterQuality.medium,
     this.errorWidget,
     this.onImageError,
-    this.animatedPlaceholder = true,
-    this.fadeIn = true,
+    this.animatedPlaceholder = false,
+    this.fadeIn = false,
   });
 
   @override
@@ -229,15 +70,15 @@ class CocNetworkImage extends StatefulWidget {
 }
 
 class _CocNetworkImageState extends State<CocNetworkImage> {
-  bool _revealed = false;
-  int _loadGeneration = 0;
+  /// Once any frame has painted for the current URL, prefer keeping [child]
+  /// (gaplessPlayback) over flashing the placeholder on rebuilds.
+  bool _hasFrame = false;
 
   @override
   void didUpdateWidget(covariant CocNetworkImage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.url != widget.url) {
-      _loadGeneration++;
-      _revealed = false;
+      _hasFrame = false;
     }
   }
 
@@ -246,15 +87,20 @@ class _CocNetworkImageState extends State<CocNetworkImage> {
       width: widget.width,
       height: widget.height,
       borderRadius: widget.borderRadius,
-      animated: widget.animatedPlaceholder,
+      animated: false,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final generation = _loadGeneration;
+    if (widget.url.isEmpty) {
+      return widget.errorWidget ?? _placeholder();
+    }
 
     final image = Image.network(
+      // Remount when the URL changes so a failed provider does not stick
+      // after the parent advances to a fallback candidate.
+      key: ValueKey(widget.url),
       widget.url,
       width: widget.width,
       height: widget.height,
@@ -263,33 +109,16 @@ class _CocNetworkImageState extends State<CocNetworkImage> {
       cacheHeight: widget.cacheHeight,
       filterQuality: widget.filterQuality,
       gaplessPlayback: true,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) {
-          if (!widget.fadeIn) return child;
-
-          if (!_revealed) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted && generation == _loadGeneration) {
-                setState(() => _revealed = true);
-              }
-            });
-          }
-          return AnimatedOpacity(
-            opacity: _revealed ? 1 : 0,
-            duration: const Duration(milliseconds: 340),
-            curve: Curves.easeOutCubic,
-            child: child,
-          );
+      // Prefer frameBuilder over loadingBuilder: loadingBuilder often
+      // flashes the placeholder even when the image is already cached.
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded || frame != null) {
+          _hasFrame = true;
+          return child;
         }
-
-        if (widget.fadeIn && _revealed) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && generation == _loadGeneration) {
-              setState(() => _revealed = false);
-            }
-          });
-        }
-
+        // Keep the previous/gapless child instead of swapping to a
+        // placeholder mid-load (this is what looked like a "blink").
+        if (_hasFrame) return child;
         return _placeholder();
       },
       errorBuilder: (context, error, stackTrace) {
@@ -307,6 +136,7 @@ class _CocNetworkImageState extends State<CocNetworkImage> {
 
     return ClipRRect(
       borderRadius: widget.borderRadius,
+      clipBehavior: Clip.hardEdge,
       child: image,
     );
   }
@@ -337,7 +167,7 @@ class CocNetworkAvatar extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.cover,
-        cacheWidth: cacheWidth,
+        cacheWidth: cacheWidth ?? (size * 2).round().clamp(48, 256),
         errorWidget: Container(
           width: size,
           height: size,

@@ -26,6 +26,23 @@ class UnitHeroImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final image = _ImageBody(
+      unit: unit,
+      player: player,
+      size: size,
+      borderRadius: borderRadius,
+      backgroundColor: backgroundColor,
+      padding: padding,
+      performanceMode: performanceMode,
+    );
+
+    if (performanceMode) {
+      return Material(
+        color: Colors.transparent,
+        child: SizedBox(width: size, height: size, child: image),
+      );
+    }
+
     return Hero(
       tag: unit.heroTag,
       flightShuttleBuilder: (

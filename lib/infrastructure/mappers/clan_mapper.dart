@@ -57,8 +57,19 @@ class ClanMapper {
         name: apiLeague.name,
       );
 
-  static ClanCapital clanCapitalToEntity(api.ClanCapital apiChatLanguage) =>
-      ClanCapital();
+  static ClanCapital clanCapitalToEntity(api.ClanCapital apiCapital) =>
+      ClanCapital(
+        capitalHallLevel: apiCapital.capitalHallLevel,
+        districts: apiCapital.districts
+            .map(
+              (d) => ClanCapitalDistrict(
+                id: d.id,
+                name: d.name,
+                districtHallLevel: d.districtHallLevel,
+              ),
+            )
+            .toList(),
+      );
 
   static ChatLanguage chatLanguageToEntity(api.ChatLanguage apiChatLanguage) =>
       ChatLanguage(
@@ -230,5 +241,16 @@ class ClanMapper {
 
   static ClanCapital clanCapitalDetailsToEntity(
           api_details.ClanCapital clanCapital) =>
-      ClanCapital();
+      ClanCapital(
+        capitalHallLevel: clanCapital.capitalHallLevel,
+        districts: clanCapital.districts
+            .map(
+              (d) => ClanCapitalDistrict(
+                id: d.id,
+                name: d.name,
+                districtHallLevel: d.districtHallLevel,
+              ),
+            )
+            .toList(),
+      );
 }

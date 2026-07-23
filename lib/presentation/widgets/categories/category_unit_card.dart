@@ -55,15 +55,52 @@ class CategoryUnitCard extends StatelessWidget {
                               ? constraints.maxWidth
                               : constraints.maxHeight) -
                           12;
-                      return Center(
-                        child: UnitHeroImage(
-                          unit: unit,
-                          player: player,
-                          size: size.clamp(0, double.infinity),
-                          performanceMode: true,
-                          backgroundColor:
-                              colorScheme.secondary.withValues(alpha: 0.18),
-                        ),
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Center(
+                            child: UnitHeroImage(
+                              unit: unit,
+                              player: player,
+                              size: size.clamp(0, double.infinity),
+                              performanceMode: true,
+                              backgroundColor:
+                                  colorScheme.secondary.withValues(alpha: 0.18),
+                            ),
+                          ),
+                          if (unit.superTroopIsActive)
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF6B2D8B),
+                                  borderRadius: BorderRadius.circular(8),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  l10n.superTroopActiveBadge,
+                                  style: const TextStyle(
+                                    fontFamily: AppFonts.primary,
+                                    color: Colors.white,
+                                    fontSize: 7,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       );
                     },
                   ),
