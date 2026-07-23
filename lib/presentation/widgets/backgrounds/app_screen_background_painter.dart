@@ -8,12 +8,14 @@ import 'package:flutter/material.dart';
 class AppScreenBackgroundPainter extends CustomPainter {
   final Color primary;
   final Color secondary;
+  final Color? mood;
   final AppScreenBackgroundVariant variant;
 
   AppScreenBackgroundPainter({
     required this.primary,
     required this.secondary,
     required this.variant,
+    this.mood,
   });
 
   int get _sparkleSeed => switch (variant) {
@@ -61,6 +63,13 @@ class AppScreenBackgroundPainter extends CustomPainter {
         _paintConstellation(canvas, size, seed: 58, topFactor: 0.32);
         _paintIsometricGrid(canvas, size, startFactor: 0.62, intensity: 0.55);
       case AppScreenBackgroundVariant.compare:
+        final wash = mood ?? secondary;
+        _drawGlowOrb(
+          canvas,
+          center: Offset(size.width * 0.5, size.height * 0.18),
+          radius: 160,
+          inner: wash.withValues(alpha: 0.34),
+        );
         _drawGlowOrb(
           canvas,
           center: Offset(size.width * 0.18, size.height * 0.28),
@@ -71,7 +80,7 @@ class AppScreenBackgroundPainter extends CustomPainter {
           canvas,
           center: Offset(size.width * 0.82, size.height * 0.28),
           radius: 105,
-          inner: const Color(0xFF6B4E71).withValues(alpha: 0.22),
+          inner: const Color(0xFF7A5688).withValues(alpha: 0.22),
         );
         _paintVsWatermark(canvas, size);
         _paintConstellation(canvas, size, seed: 71, topFactor: 0.38);
@@ -112,6 +121,7 @@ class AppScreenBackgroundPainter extends CustomPainter {
   }
 
   void _paintSky(Canvas canvas, Size size) {
+    final wash = mood ?? secondary;
     final rect = Offset.zero & size;
     canvas.drawRect(
       rect,
@@ -122,7 +132,7 @@ class AppScreenBackgroundPainter extends CustomPainter {
           colors: [
             const Color(0xFFE8EEF8),
             const Color(0xFFEDF5EA),
-            secondary.withValues(alpha: 0.42),
+            wash.withValues(alpha: 0.42),
             const Color(0xFFF3EBE0),
             AppScreenBackgroundColors.base,
           ],
@@ -141,15 +151,20 @@ class AppScreenBackgroundPainter extends CustomPainter {
       AppScreenBackgroundVariant.unit => 0.8,
     };
 
+    final wash = mood ?? secondary;
+    final midBand = mood != null
+        ? wash.withValues(alpha: 0.16 * intensity)
+        : const Color(0xFFB565D8).withValues(alpha: 0.10 * intensity);
+
     final bands = [
-      (0.12, primary.withValues(alpha: 0.14 * intensity), 0.18),
-      (0.22, const Color(0xFFB565D8).withValues(alpha: 0.10 * intensity), 0.14),
-      (0.34, secondary.withValues(alpha: 0.22 * intensity), 0.16),
+      (0.12, (mood ?? primary).withValues(alpha: 0.14 * intensity), 0.18),
+      (0.22, midBand, 0.14),
+      (0.34, wash.withValues(alpha: 0.22 * intensity), 0.16),
     ];
 
     for (final (yFactor, color, amp) in bands) {
       final path = Path()..moveTo(0, size.height * yFactor);
-      for (var x = 0.0; x <= size.width; x += 6) {
+      for (var x = 0.0; x <= size.width; x += 12) {
         final y = size.height * yFactor +
             math.sin((x / size.width) * math.pi * 3.2) * size.height * amp;
         path.lineTo(x, y);
@@ -213,7 +228,7 @@ class AppScreenBackgroundPainter extends CustomPainter {
   }) {
     final rng = math.Random(seed);
     final points = List.generate(
-      12,
+      8,
       (_) => Offset(
         rng.nextDouble() * size.width,
         rng.nextDouble() * size.height * topFactor + size.height * 0.04,
@@ -430,33 +445,34 @@ class AppScreenBackgroundPainter extends CustomPainter {
     required double startFactor,
     required double intensity,
   }) {
-    const spacing = 26.0;
+    const spacing = 34.0;
     final startY = size.height * startFactor;
-    final rows = ((size.height - startY) / (spacing * 0.52)).ceil() + 2;
-    final cols = (size.width / spacing).ceil() + 2;
+    final rows = math.min(
+      ((size.height - startY) / (spacing * 0.52)).ceil() + 1,
+      18,
+    );
+    final cols = (size.width / spacing).ceil() + 1;
 
     for (var row = 0; row < rows; row++) {
+      if (row.isOdd && intensity < 0.85) continue;
       final rowFade = (row / rows).clamp(0.0, 1.0);
-      final fillPaint = Paint()
-        ..color = primary.withValues(alpha: (0.015 + rowFade * 0.025) * intensity);
       final strokePaint = Paint()
-        ..color = primary.withValues(alpha: (0.035 + rowFade * 0.05) * intensity)
+        ..color = primary.withValues(alpha: (0.03 + rowFade * 0.045) * intensity)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 0.9;
+        ..strokeWidth = 0.8;
 
       for (var col = -1; col < cols; col++) {
         final cx = col * spacing + (row.isOdd ? spacing * 0.5 : 0);
         final cy = startY + row * spacing * 0.52;
-        _drawIsoDiamond(canvas, Offset(cx, cy), spacing * 0.46, fillPaint, strokePaint);
+        _drawIsoDiamondStroke(canvas, Offset(cx, cy), spacing * 0.44, strokePaint);
       }
     }
   }
 
-  void _drawIsoDiamond(
+  void _drawIsoDiamondStroke(
     Canvas canvas,
     Offset center,
     double radius,
-    Paint fill,
     Paint stroke,
   ) {
     final path = Path()
@@ -465,13 +481,12 @@ class AppScreenBackgroundPainter extends CustomPainter {
       ..lineTo(center.dx, center.dy + radius * 0.55)
       ..lineTo(center.dx - radius, center.dy)
       ..close();
-    canvas.drawPath(path, fill);
     canvas.drawPath(path, stroke);
   }
 
   void _paintSparkles(Canvas canvas, Size size) {
     final rng = math.Random(_sparkleSeed);
-    for (var i = 0; i < 44; i++) {
+    for (var i = 0; i < 22; i++) {
       canvas.drawCircle(
         Offset(rng.nextDouble() * size.width, rng.nextDouble() * size.height),
         0.6 + rng.nextDouble() * 1.4,
@@ -497,6 +512,7 @@ class AppScreenBackgroundPainter extends CustomPainter {
   bool shouldRepaint(covariant AppScreenBackgroundPainter oldDelegate) {
     return oldDelegate.primary != primary ||
         oldDelegate.secondary != secondary ||
+        oldDelegate.mood != mood ||
         oldDelegate.variant != variant;
   }
 }

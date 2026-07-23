@@ -129,6 +129,7 @@ class HeroEquipment {
   int maxLevel;
   String village;
   List<HeroEquipment>? equipment;
+  bool superTroopIsActive;
 
   HeroEquipment({
     required this.name,
@@ -136,6 +137,7 @@ class HeroEquipment {
     required this.maxLevel,
     required this.village,
     this.equipment,
+    this.superTroopIsActive = false,
   });
 
 }

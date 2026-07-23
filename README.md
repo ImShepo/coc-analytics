@@ -4,11 +4,18 @@ App Flutter para consultar perfiles, clanes, estadísticas y comparativas de jug
 
 ## Setup
 
-1. Copia `.env.example` a `.env`.
-2. Añade tu API key de [developer.clashofclans.com](https://developer.clashofclans.com/) en `COC_KEY`.
+1. Copia `.env.example` si quieres un override local; por defecto debug usa `.env.development`.
+2. Arranca el proxy en `api/` (ahí vive `COC_KEY`, no en la app).
 3. Instala dependencias: `flutter pub get`
 4. Genera localizaciones: `flutter gen-l10n`
-5. Ejecuta: `flutter run`
+5. Debug: `flutter run` → `.env.development`  
+   Release / Play: `.env.production` (Cloud Run, sin `COC_KEY`).
+
+Probar la API de producción en debug:
+
+```bash
+flutter run --dart-define=ENV_FILE=.env.production
+```
 
 ## Nota
 

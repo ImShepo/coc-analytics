@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomInput extends StatefulWidget {
   final IconData icon;
@@ -6,6 +7,9 @@ class CustomInput extends StatefulWidget {
   final TextEditingController textController;
   final TextInputType keyboardType;
   final bool isPassword;
+  final bool dense;
+  final List<TextInputFormatter>? inputFormatters;
+  final TextCapitalization textCapitalization;
 
   const CustomInput({
     super.key,
@@ -14,6 +18,9 @@ class CustomInput extends StatefulWidget {
     required this.textController,
     this.keyboardType = TextInputType.text,
     this.isPassword = false,
+    this.dense = false,
+    this.inputFormatters,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   @override
@@ -22,7 +29,7 @@ class CustomInput extends StatefulWidget {
 
 class _CustomInputState extends State<CustomInput> {
   late FocusNode _focusNode;
-  Color _hintColor = Colors.grey;
+  Color _hintColor = const Color(0xFF9E9E9E);
 
   @override
   void initState() {
@@ -30,7 +37,10 @@ class _CustomInputState extends State<CustomInput> {
     _focusNode = FocusNode()
       ..addListener(() {
         setState(() {
-          _hintColor = _focusNode.hasFocus ? Colors.green : Colors.grey;
+          // Stay grey; slightly darker when focused (never green).
+          _hintColor = _focusNode.hasFocus
+              ? const Color(0xFF757575)
+              : const Color(0xFF9E9E9E);
         });
       });
   }
@@ -43,11 +53,12 @@ class _CustomInputState extends State<CustomInput> {
 
   @override
   Widget build(BuildContext context) {
-    const fieldHeight = 52.0;
+    final fieldHeight = widget.dense ? 48.0 : 52.0;
+    final bottomMargin = widget.dense ? 12.0 : 20.0;
 
     return Container(
       height: fieldHeight,
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: EdgeInsets.only(bottom: bottomMargin),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
@@ -65,6 +76,8 @@ class _CustomInputState extends State<CustomInput> {
         autocorrect: false,
         keyboardType: widget.keyboardType,
         obscureText: widget.isPassword,
+        textCapitalization: widget.textCapitalization,
+        inputFormatters: widget.inputFormatters,
         textAlignVertical: TextAlignVertical.center,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontSize: 13,
@@ -78,7 +91,7 @@ class _CustomInputState extends State<CustomInput> {
             right: 16,
           ),
           prefixIcon: Icon(widget.icon, color: _hintColor),
-          prefixIconConstraints: const BoxConstraints(
+          prefixIconConstraints: BoxConstraints(
             minWidth: 48,
             minHeight: fieldHeight,
           ),

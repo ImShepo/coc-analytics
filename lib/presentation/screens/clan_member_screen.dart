@@ -1,5 +1,6 @@
 import 'package:coc/config/helpers/member_role.dart';
 import 'package:coc/config/helpers/player_tag.dart';
+import 'package:coc/config/helpers/town_hall_asset.dart';
 import 'package:coc/config/theme/app_fonts.dart';
 import 'package:coc/domain/entities/member_list.dart';
 import 'package:coc/domain/entities/player.dart';
@@ -12,7 +13,6 @@ import 'package:coc/presentation/widgets/backgrounds/app_screen_background_varia
 import 'package:coc/presentation/widgets/coc_network_image.dart';
 import 'package:coc/presentation/widgets/member_profile_categories.dart';
 import 'package:flutter/material.dart';
-
 class ClanMemberScreen extends StatelessWidget {
   final MemberList member;
   final Player? viewerPlayer;
@@ -22,11 +22,6 @@ class ClanMemberScreen extends StatelessWidget {
     required this.member,
     this.viewerPlayer,
   });
-
-  String _townHallAsset(int level) {
-    final assetLevel = level.clamp(1, 16);
-    return 'assets/images/townhall/TownHall$assetLevel.png';
-  }
 
   String get _leagueIcon => member.league.iconUrls.medium.isEmpty
       ? 'http://clash-wiki.com/images/progress/leagues/no_league.png'
@@ -168,7 +163,7 @@ class ClanMemberScreen extends StatelessWidget {
                           trailing: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: Image.asset(
-                              _townHallAsset(member.townHallLevel),
+                              townHallAssetPath(member.townHallLevel),
                               width: 36,
                               height: 36,
                               fit: BoxFit.cover,
@@ -814,22 +809,16 @@ class _TagCard extends StatelessWidget {
           color: colorScheme.primary.withValues(alpha: 0.25),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.tag_rounded, size: 16, color: colorScheme.onPrimary),
-          const SizedBox(width: 8),
-          Text(
-            tag,
-            style: TextStyle(
-              fontFamily: AppFonts.primary,
-              color: colorScheme.onPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
+      child: Text(
+        playerTagToDisplay(tag),
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontFamily: AppFonts.primary,
+          color: colorScheme.onPrimary,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }

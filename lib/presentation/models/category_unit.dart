@@ -1,5 +1,6 @@
 import 'package:coc/config/helpers/building_catalog.dart';
 import 'package:coc/config/helpers/coc_unit_image.dart';
+import 'package:coc/config/helpers/town_hall_asset.dart';
 import 'package:coc/config/helpers/troop_catalog.dart';
 import 'package:coc/config/helpers/unit_static_repository.dart';
 import 'package:coc/domain/entities/player.dart';
@@ -17,6 +18,7 @@ class CategoryUnit {
   final int? unlockTownHall;
   final bool hasExactLevel;
   final String? imageName;
+  final bool superTroopIsActive;
 
   const CategoryUnit({
     required this.name,
@@ -31,6 +33,7 @@ class CategoryUnit {
     this.unlockTownHall,
     this.hasExactLevel = true,
     this.imageName,
+    this.superTroopIsActive = false,
   });
 
   String get displayImageName => imageName ?? name;
@@ -77,6 +80,7 @@ class CategoryUnit {
             village: t.village,
             category: UnitCategory.troop,
             troopGroup: TroopCatalog.troopGroupFor(t.name, t.village),
+            superTroopIsActive: t.superTroopIsActive,
           ),
         )
         .toList();
@@ -89,6 +93,9 @@ class CategoryUnit {
     }
     for (final list in map.values) {
       list.sort((a, b) {
+        if (a.superTroopIsActive != b.superTroopIsActive) {
+          return a.superTroopIsActive ? -1 : 1;
+        }
         if (a.isUnlocked != b.isUnlocked) {
           return a.isUnlocked ? -1 : 1;
         }
@@ -206,7 +213,7 @@ class CategoryUnit {
           village: entry.village,
           category: UnitCategory.building,
           buildingGroup: entry.group,
-          localAssetPath: 'assets/images/townhall/TownHall${thLevel.clamp(1, 16)}.png',
+          localAssetPath: townHallAssetPath(thLevel),
         );
       }
 
@@ -218,8 +225,7 @@ class CategoryUnit {
           village: entry.village,
           category: UnitCategory.building,
           buildingGroup: entry.group,
-          localAssetPath:
-              'assets/images/townhall/TownHall${bhLevel.clamp(1, 16)}.png',
+          localAssetPath: townHallAssetPath(bhLevel),
         );
       }
 

@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 
 class Logo extends StatelessWidget {
   final String title;
+  final bool compact;
 
-  const Logo({super.key, required this.title});
+  const Logo({
+    super.key,
+    required this.title,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,13 +17,14 @@ class Logo extends StatelessWidget {
     return Center(
       child: Container(
         width: 300,
-        margin: const EdgeInsets.only(top: 50),
+        margin: EdgeInsets.only(top: compact ? 24 : 50),
         child: Column(
           children: [
-            const Image(image: AssetImage('assets/images/coc-background.png'), fit: BoxFit.cover),
-            const SizedBox(
-              height: 5,
+            const Image(
+              image: AssetImage('assets/images/coc-background.png'),
+              fit: BoxFit.cover,
             ),
+            SizedBox(height: compact ? 2 : 5),
             Text(
               title,
               style: TextStyle(
@@ -26,7 +32,7 @@ class Logo extends StatelessWidget {
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
-            )
+            ),
           ],
         ),
       ),

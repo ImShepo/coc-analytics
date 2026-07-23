@@ -7,12 +7,15 @@ class AppScreenBackground extends StatelessWidget {
   final AppScreenBackgroundVariant variant;
   final Color? primary;
   final Color? secondary;
+  /// Optional ambient tint (e.g. compare tab mood). Falls back to [secondary].
+  final Color? mood;
 
   const AppScreenBackground({
     super.key,
     required this.variant,
     this.primary,
     this.secondary,
+    this.mood,
   });
 
   @override
@@ -23,6 +26,7 @@ class AppScreenBackground extends StatelessWidget {
       painter: AppScreenBackgroundPainter(
         primary: primary ?? colorScheme.onPrimary,
         secondary: secondary ?? colorScheme.secondary,
+        mood: mood,
         variant: variant,
       ),
     );

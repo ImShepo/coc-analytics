@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "732642728426",
     "project_id": "clash-of-clans-2fd27",
-    "storage_bucket": "clash-of-clans-2fd27.appspot.com"
+    "storage_bucket": "clash-of-clans-2fd27.firebasestorage.app"
   },
   "client": [
     {
@@ -14,11 +14,27 @@
       },
       "oauth_client": [
         {
+          "client_id": "732642728426-85090b3l2dema515gja3jscffmsrpp1t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.imshepo.coc",
+            "certificate_hash": "12113f4bdb59a27573188428012e15ca3329852e"
+          }
+        },
+        {
           "client_id": "732642728426-i8oqc57i9l5jahvas13q27o3vm9fv4al.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.imshepo.coc",
             "certificate_hash": "aabc0473a75f07fe4636384446fb3138c31907d5"
+          }
+        },
+        {
+          "client_id": "732642728426-lchajfhp19lbt8gle87u1sof90ldomhi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.imshepo.coc",
+            "certificate_hash": "241e8d0fa1bd4f3eb36620572dc3b592968b6b45"
           }
         },
         {
@@ -37,6 +53,13 @@
             {
               "client_id": "732642728426-9oprc6fh4ukvep1t4urb0l777jegp4ef.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "732642728426-leb04t0kgm481vfg620sev5p25ain7h8.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.imshepo.coc"
+              }
             }
           ]
         }
