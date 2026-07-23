@@ -198,7 +198,11 @@ class _CocUnitImageWidgetState extends State<CocUnitImageWidget> {
     return _clipChild(
       _withLevelBadge(
         CocNetworkImage(
-          key: ValueKey(currentUrl),
+          // Stable key per unit (not per candidate URL) so fallback URL
+          // switches do not remount and flash the placeholder.
+          key: ValueKey(
+            '${widget.category.name}-${widget.village}-${widget.name}-${widget.level}',
+          ),
           url: currentUrl,
           fit: widget.fit,
           width: widget.width,
@@ -207,8 +211,8 @@ class _CocUnitImageWidgetState extends State<CocUnitImageWidget> {
           cacheHeight: cacheSize,
           filterQuality:
               widget.performanceMode ? FilterQuality.low : FilterQuality.medium,
-          animatedPlaceholder: !widget.performanceMode,
-          fadeIn: !widget.performanceMode,
+          animatedPlaceholder: false,
+          fadeIn: false,
           borderRadius: BorderRadius.circular(6),
           onImageError: () {
             WidgetsBinding.instance.addPostFrameCallback((_) => _tryNextUrl());
@@ -224,7 +228,7 @@ class _CocUnitImageWidgetState extends State<CocUnitImageWidget> {
               : CocImageLoadingPlaceholder(
                   width: widget.width,
                   height: widget.height,
-                  animated: !widget.performanceMode,
+                  animated: false,
                 ),
         ),
       ),

@@ -1,5 +1,5 @@
-import 'package:coc/config/helpers/coc_unit_image.dart';
 import 'package:coc/config/helpers/troop_catalog.dart';
+import 'package:coc/config/helpers/coc_unit_image.dart';
 import 'package:coc/config/theme/app_fonts.dart';
 import 'package:coc/domain/entities/player.dart';
 import 'package:coc/l10n/category_unit_l10n.dart';
@@ -8,6 +8,7 @@ import 'package:coc/presentation/models/category_unit.dart';
 import 'package:coc/presentation/models/unit_detail_insights.dart';
 import 'package:coc/presentation/widgets/backgrounds/app_screen_stack.dart';
 import 'package:coc/presentation/widgets/backgrounds/app_screen_background_variant.dart';
+import 'package:coc/presentation/widgets/categories/coc_unit_image_widget.dart';
 import 'package:coc/presentation/widgets/categories/unit_hero_image.dart';
 import 'package:coc/presentation/widgets/liquid_glass.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +32,16 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
   Locale? _lastLocale;
 
   CategoryUnit get unit => widget.unit;
+
+  List<HeroEquipment> get _equippedGear {
+    if (unit.category != UnitCategory.hero) return const [];
+    for (final hero in widget.player.heroes) {
+      if (hero.name == unit.name) {
+        return hero.equipment ?? const [];
+      }
+    }
+    return const [];
+  }
 
   @override
   void didChangeDependencies() {
@@ -139,9 +150,21 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
                           label: l10n.maxLevel,
                           color: const Color(0xFFC9A227),
                         ),
+                      if (unit.superTroopIsActive)
+                        _Chip(
+                          label: l10n.superTroopActive,
+                          color: const Color(0xFF6B2D8B),
+                        ),
                     ],
                   ),
                   const SizedBox(height: 20),
+                  if (_equippedGear.isNotEmpty) ...[
+                    _EquippedGearCard(
+                      equipment: _equippedGear,
+                      player: widget.player,
+                    ),
+                    const SizedBox(height: 14),
+                  ],
                   FutureBuilder<UnitDetailInsights>(
                     future: _insightsFuture,
                     builder: (context, snapshot) {
@@ -206,6 +229,108 @@ class _LoadingCard extends StatelessWidget {
       ),
       child: const Center(
         child: CircularProgressIndicator(strokeWidth: 2),
+      ),
+    );
+  }
+}
+
+class _EquippedGearCard extends StatelessWidget {
+  final List<HeroEquipment> equipment;
+  final Player player;
+
+  const _EquippedGearCard({
+    required this.equipment,
+    required this.player,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.equippedEquipment.toUpperCase(),
+            style: TextStyle(
+              fontFamily: AppFonts.primary,
+              color: colorScheme.onPrimary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...equipment.map((gear) {
+            final owned = player.heroEquipment
+                .where((e) => e.name == gear.name)
+                .toList();
+            final level = owned.isNotEmpty ? owned.first.level : gear.level;
+            final maxLevel =
+                owned.isNotEmpty ? owned.first.maxLevel : gear.maxLevel;
+            final village =
+                owned.isNotEmpty ? owned.first.village : gear.village;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  CocUnitImageWidget(
+                    name: gear.name,
+                    category: UnitCategory.equipment,
+                    level: level,
+                    maxLevel: maxLevel,
+                    village: village,
+                    width: 44,
+                    height: 44,
+                    showLevelBadge: true,
+                    levelBadgeValue: level,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          gear.name,
+                          style: TextStyle(
+                            fontFamily: AppFonts.primary,
+                            color: colorScheme.onPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Nv. $level / $maxLevel',
+                          style: TextStyle(
+                            fontFamily: AppFonts.primary,
+                            color: colorScheme.onPrimary.withValues(alpha: 0.65),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }

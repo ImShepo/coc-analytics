@@ -16,32 +16,32 @@ class GoogleSignInButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         splashColor: Colors.white24,
         highlightColor: Colors.white10,
         child: LiquidGlassSurface(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
           tintColor: Colors.white,
           tintStrength: 0.6,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
           child: SizedBox(
             width: double.infinity,
-            height: 48,
+            height: 42,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset(
                   'assets/images/google_logo.png',
-                  width: 18,
-                  height: 18,
+                  width: 16,
+                  height: 16,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Text(
                   context.l10n.googleSignIn,
                   style: const TextStyle(
                     fontFamily: AppFonts.primary,
                     color: _label,
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0.1,
                   ),

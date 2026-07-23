@@ -527,30 +527,21 @@ class _UnitsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final cellWidth =
-            (constraints.maxWidth - _spacing * (_crossAxisCount - 1)) /
-                _crossAxisCount;
-        final cellHeight = cellWidth / _aspectRatio;
-
-        return Wrap(
-          spacing: _spacing,
-          runSpacing: _spacing,
-          children: [
-            for (var i = 0; i < units.length; i++)
-              SizedBox(
-                key: ValueKey(units[i].heroTag),
-                width: cellWidth,
-                height: cellHeight,
-                child: CategoryUnitCard(
-                  unit: units[i],
-                  player: player,
-                ),
-              ),
-          ],
-        );
-      },
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: _crossAxisCount,
+        crossAxisSpacing: _spacing,
+        mainAxisSpacing: _spacing,
+        childAspectRatio: _aspectRatio,
+      ),
+      itemCount: units.length,
+      itemBuilder: (context, index) => CategoryUnitCard(
+        key: ValueKey(units[index].heroTag),
+        unit: units[index],
+        player: player,
+      ),
     );
   }
 }

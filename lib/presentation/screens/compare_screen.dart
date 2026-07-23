@@ -1,7 +1,9 @@
 import 'package:coc/config/helpers/clan_tag.dart';
+import 'package:coc/config/helpers/errors.dart';
 import 'package:coc/config/helpers/player_compare.dart';
 import 'package:coc/config/helpers/player_tag.dart';
 import 'package:coc/config/helpers/troop_catalog.dart';
+import 'package:coc/config/helpers/upper_case_formatter.dart';
 import 'package:coc/config/theme/app_fonts.dart';
 import 'package:coc/domain/entities/member_list.dart';
 import 'package:coc/domain/entities/player.dart';
@@ -15,7 +17,9 @@ import 'package:coc/presentation/widgets/backgrounds/app_screen_background_varia
 import 'package:coc/presentation/widgets/coc_network_image.dart';
 import 'package:coc/presentation/widgets/compare/compare_charts.dart';
 import 'package:coc/presentation/widgets/liquid_glass.dart';
+import 'package:coc/services/recent_compare_tags_store.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CompareScreen extends ConsumerStatefulWidget {
@@ -43,11 +47,36 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
   late final FocusNode _tagFocusNode;
   String? _opponentTag;
   String? _opponentName;
+  List<RecentCompareTag> _recentTags = const [];
+  bool _showRecentPanel = false;
+  CompareWinner? _cachedTabWinner;
+  int? _cachedTabIndex;
+  String? _cachedOpponentTag;
+
+  CompareWinner _resolveTabWinner(int tabIndex, Player opponent) {
+    if (_cachedTabWinner != null &&
+        _cachedTabIndex == tabIndex &&
+        _cachedOpponentTag == opponent.tag) {
+      return _cachedTabWinner!;
+    }
+    final winner = _tabWinnerForIndex(tabIndex, widget.me, opponent);
+    _cachedTabWinner = winner;
+    _cachedTabIndex = tabIndex;
+    _cachedOpponentTag = opponent.tag;
+    return winner;
+  }
+
+  void _invalidateTabWinnerCache() {
+    _cachedTabWinner = null;
+    _cachedTabIndex = null;
+    _cachedOpponentTag = null;
+  }
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(_onTabChanged);
     _tagFocusNode = FocusNode();
     _opponentTag = widget.initialOpponentTag != null
         ? normalizePlayerTag(widget.initialOpponentTag!)
@@ -56,6 +85,9 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
     _tagController = TextEditingController(
       text: _opponentTag != null ? playerTagToDisplay(_opponentTag!) : '',
     );
+    _tagFocusNode.addListener(_onSearchFocusChanged);
+
+    Future.microtask(_loadRecentTags);
 
     if (_opponentTag != null && _opponentTag!.isNotEmpty) {
       Future.microtask(_loadOpponent);
@@ -70,16 +102,98 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
     }
   }
 
+  void _onTabChanged() {
+    if (_tabController.indexIsChanging || !mounted) return;
+    setState(() {});
+  }
+
+  CompareWinner _tabWinnerForIndex(int index, Player me, Player opponent) {
+    return switch (index) {
+      0 || 1 => tabWinnerFromMetrics(buildCompareMetrics(me, opponent)),
+      2 => tabWinnerFromAchievements(me, opponent),
+      3 => tabWinnerFromUnits(me, opponent),
+      _ => CompareWinner.tie,
+    };
+  }
+
   @override
   void dispose() {
+    _tagFocusNode.removeListener(_onSearchFocusChanged);
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _tagController.dispose();
     _tagFocusNode.dispose();
     super.dispose();
   }
 
+  List<RecentCompareTag> _filteredRecentTagsFor(String rawQuery) {
+    final myTag = normalizePlayerTag(widget.me.tag);
+    final query = normalizePlayerTag(rawQuery);
+    final base = _recentTags.where((e) => e.tag != myTag);
+    if (query.isEmpty) return base.toList();
+    return base
+        .where((e) {
+          final tagHit = e.tag.contains(query);
+          final nameHit =
+              e.name?.toUpperCase().contains(query.toUpperCase()) ?? false;
+          return tagHit || nameHit;
+        })
+        .toList();
+  }
+
+  void _onSearchFocusChanged() {
+    if (_tagFocusNode.hasFocus) {
+      setState(() => _showRecentPanel = true);
+    }
+  }
+
+  void _dismissTagSearch() {
+    final hadFocus = _tagFocusNode.hasFocus;
+    final panelOpen = _showRecentPanel;
+    if (!hadFocus && !panelOpen) return;
+    _tagFocusNode.unfocus();
+    setState(() => _showRecentPanel = false);
+  }
+
   void _focusSearch() {
     _tagFocusNode.requestFocus();
+    setState(() => _showRecentPanel = true);
+  }
+
+  Future<void> _loadRecentTags() async {
+    final entries = await RecentCompareTagsStore.load();
+    if (!mounted) return;
+    setState(() => _recentTags = entries);
+  }
+
+  Future<void> _rememberRecentTag(String tag, {String? name}) async {
+    final myTag = normalizePlayerTag(widget.me.tag);
+    final normalized = normalizePlayerTag(tag);
+    if (normalized.isEmpty || normalized == myTag) return;
+    final entries = await RecentCompareTagsStore.remember(
+      normalized,
+      name: name,
+    );
+    if (!mounted) return;
+    setState(() => _recentTags = entries);
+  }
+
+  Future<void> _removeRecentTag(String tag) async {
+    final entries = await RecentCompareTagsStore.remove(tag);
+    if (!mounted) return;
+    setState(() => _recentTags = entries);
+  }
+
+  Future<void> _clearRecentTags() async {
+    final entries = await RecentCompareTagsStore.clear();
+    if (!mounted) return;
+    setState(() => _recentTags = entries);
+  }
+
+  void _selectRecentTag(RecentCompareTag entry) {
+    _tagController.text = entry.displayTag;
+    setState(() => _opponentName = entry.name);
+    _loadOpponent();
   }
 
   void _selectClanMate(MemberList member) {
@@ -87,6 +201,7 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
     if (tag == _opponentTag) return;
     _tagController.text = playerTagToDisplay(member.tag);
     setState(() => _opponentName = member.name);
+    _rememberRecentTag(tag, name: member.name);
     _loadOpponent();
   }
 
@@ -96,6 +211,7 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
       _opponentName = null;
       _tagController.clear();
     });
+    _invalidateTabWinnerCache();
     _tagFocusNode.requestFocus();
   }
 
@@ -104,6 +220,7 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
     required bool clanLoading,
   }) async {
     FocusScope.of(context).unfocus();
+    setState(() => _showRecentPanel = false);
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -141,7 +258,9 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
     setState(() {
       _opponentTag = tag;
       _opponentName = null;
+      _showRecentPanel = false;
     });
+    _invalidateTabWinnerCache();
     ref.read(playerProvider.notifier).loadPlayer(tag, force: true);
   }
 
@@ -150,19 +269,70 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
     final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
     final youColor = colorScheme.primary;
-    const themColor = Color(0xFF6B4E71);
+    // Rival purple tuned for white cards + white text on dark app bar.
+    const themColor = Color(0xFF7A5688);
+    const themDark = Color(0xFF3D2A48);
+    const themSoft = Color(0xFFE9D8F0);
 
     final opponentAsync = _opponentTag == null
         ? null
-        : ref.watch(playerProvider.select((m) => m[_opponentTag!]));
+        : ref.watch(playerProvider.select((m) => m.byTag[_opponentTag!]));
 
-    final clanCacheKey = widget.me.clan.tag.isEmpty
+    final opponent = opponentAsync?.valueOrNull;
+    final hasComparison = opponent != null;
+
+    final tabIndex = _tabController.indexIsChanging
+        ? _tabController.previousIndex
+        : _tabController.index;
+
+    final tabWinner = hasComparison
+        ? _resolveTabWinner(tabIndex, opponent)
+        : CompareWinner.tie;
+    final moodAccent = switch (tabWinner) {
+      CompareWinner.you => youColor,
+      CompareWinner.them => themColor,
+      CompareWinner.tie => Color.lerp(youColor, themColor, 0.5)!,
+    };
+    final moodDark = switch (tabWinner) {
+      CompareWinner.you => colorScheme.onPrimary,
+      CompareWinner.them => themDark,
+      CompareWinner.tie =>
+        Color.lerp(colorScheme.onPrimary, themDark, 0.5)!,
+    };
+    final moodSoft = switch (tabWinner) {
+      CompareWinner.you => colorScheme.secondary,
+      CompareWinner.them => themSoft,
+      CompareWinner.tie => Color.lerp(colorScheme.secondary, themSoft, 0.5)!,
+    };
+
+    // Load the rival's clan when the compared player is ready.
+    ref.listen(
+      playerProvider.select(
+        (m) => _opponentTag == null ? null : m.byTag[_opponentTag!],
+      ),
+      (previous, next) {
+        final player = next?.valueOrNull;
+        if (player != null) {
+          final tag = normalizePlayerTag(player.tag);
+          if (tag == _opponentTag) {
+            _rememberRecentTag(tag, name: player.name);
+          }
+        }
+        final clanTag = player?.clan.tag;
+        if (clanTag != null && clanTag.isNotEmpty) {
+          ref.read(clanInfoProvider.notifier).loadClan(clanTag);
+        }
+      },
+    );
+
+    // My clan mates — used to pick an opponent before / from the sheet.
+    final myClanCacheKey = widget.me.clan.tag.isEmpty
         ? null
         : normalizeClanTag(widget.me.clan.tag);
-    final clan = clanCacheKey == null
+    final myClan = myClanCacheKey == null
         ? null
-        : ref.watch(clanInfoProvider.select((m) => m[clanCacheKey]));
-    final clanMates = clan?.memberList
+        : ref.watch(clanInfoProvider.select((m) => m.byTag[myClanCacheKey]));
+    final myClanMates = myClan?.memberList
             .where(
               (m) =>
                   normalizePlayerTag(m.tag) !=
@@ -171,19 +341,44 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
             .toList() ??
         const <MemberList>[];
 
-    final opponent = opponentAsync?.valueOrNull;
-    final hasComparison = opponent != null;
+    // Rival clan mates — quick switch only when the compared player has a clan.
+    final rivalClanCacheKey = (opponent == null || opponent.clan.tag.isEmpty)
+        ? null
+        : normalizeClanTag(opponent.clan.tag);
+    final rivalClan = rivalClanCacheKey == null
+        ? null
+        : ref.watch(clanInfoProvider.select((m) => m.byTag[rivalClanCacheKey]));
+    if (rivalClanCacheKey != null && rivalClan == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(clanInfoProvider.notifier).loadClan(rivalClanCacheKey);
+      });
+    }
+    final rivalClanMates = rivalClan == null || opponent == null
+        ? const <MemberList>[]
+        : rivalClan.memberList
+            .where(
+              (m) =>
+                  normalizePlayerTag(m.tag) !=
+                      normalizePlayerTag(opponent.tag) &&
+                  normalizePlayerTag(m.tag) !=
+                      normalizePlayerTag(widget.me.tag),
+            )
+            .toList();
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AppScreenStack(
         variant: AppScreenBackgroundVariant.compare,
+        primary: hasComparison ? youColor : null,
+        secondary: hasComparison ? themColor : null,
+        mood: hasComparison ? moodSoft : null,
         child: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverAppBar(
             expandedHeight: 210,
             pinned: true,
-            backgroundColor: colorScheme.onPrimary,
+            backgroundColor: hasComparison ? moodDark : colorScheme.onPrimary,
             title: Text(
               l10n.compareTitle,
               style: const TextStyle(
@@ -202,14 +397,18 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
                 fit: StackFit.expand,
                 children: [
                   Image.asset('assets/images/COC.jpeg', fit: BoxFit.cover),
-                  DecoratedBox(
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 380),
+                    curve: Curves.easeOutCubic,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          colorScheme.primary.withValues(alpha: 0.4),
-                          colorScheme.onPrimary.withValues(alpha: 0.92),
+                          (hasComparison ? moodAccent : colorScheme.primary)
+                              .withValues(alpha: 0.42),
+                          (hasComparison ? moodDark : colorScheme.onPrimary)
+                              .withValues(alpha: 0.92),
                         ],
                       ),
                     ),
@@ -259,9 +458,9 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
                                   themColor: themColor,
                                   onOpponentTap: _opponentTag != null
                                       ? () => _openOpponentPicker(
-                                            clanMates: clanMates,
-                                            clanLoading: clanCacheKey != null &&
-                                                clan == null,
+                                            clanMates: myClanMates,
+                                            clanLoading: myClanCacheKey != null &&
+                                                myClan == null,
                                           )
                                       : null,
                                 ),
@@ -304,22 +503,43 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: _OpponentSearchBar(
-                controller: _tagController,
-                focusNode: _tagFocusNode,
-                onSearch: _loadOpponent,
-                onTapBar: _focusSearch,
-                onClear: _opponentTag != null ? _resetOpponent : null,
+              child: TapRegion(
+                onTapOutside: (_) => _dismissTagSearch(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _OpponentSearchBar(
+                      controller: _tagController,
+                      focusNode: _tagFocusNode,
+                      onSearch: _loadOpponent,
+                      onTapBar: _focusSearch,
+                      onClear: _opponentTag != null ? _resetOpponent : null,
+                    ),
+                    if (_showRecentPanel && _recentTags.isNotEmpty)
+                      ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _tagController,
+                        builder: (context, value, _) {
+                          return _RecentCompareTagsPanel(
+                            entries: _filteredRecentTagsFor(value.text),
+                            hasAnyHistory: _recentTags.isNotEmpty,
+                            onSelect: _selectRecentTag,
+                            onRemove: _removeRecentTag,
+                            onClearAll: _clearRecentTags,
+                          );
+                        },
+                      ),
+                  ],
+                ),
               ),
             ),
             opponentAsync?.valueOrNull != null
                 ? _OpponentSwitcherBar(
                     opponent: opponent!,
-                    clanMates: clanMates,
+                    clanMates: rivalClanMates,
                     currentOpponentTag: _opponentTag,
                     onChangeOpponent: () => _openOpponentPicker(
-                      clanMates: clanMates,
-                      clanLoading: clanCacheKey != null && clan == null,
+                      clanMates: myClanMates,
+                      clanLoading: myClanCacheKey != null && myClan == null,
                     ),
                     onSelectClanMate: _selectClanMate,
                   )
@@ -328,8 +548,8 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
               child: opponentAsync == null
                   ? _ComparePickOpponentPanel(
                       me: widget.me,
-                      clanMates: clanMates,
-                      clanLoading: clanCacheKey != null && clan == null,
+                      clanMates: myClanMates,
+                      clanLoading: myClanCacheKey != null && myClan == null,
                       onFocusSearch: _focusSearch,
                       onSelectClanMate: _selectClanMate,
                       l10n: l10n,
@@ -339,8 +559,12 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                       error: (error, _) => _CompareError(
-                        message: error.toString(),
+                        message: localizedApiError(
+                          apiExceptionFromObject(error),
+                          l10n,
+                        ),
                         onRetry: _loadOpponent,
+                        isNotFound: isApiNotFound(error),
                       ),
                       data: (opponent) => TabBarView(
                         controller: _tabController,
@@ -350,6 +574,7 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
                             opponent: opponent,
                             youColor: youColor,
                             themColor: themColor,
+                            moodDark: moodDark,
                           ),
                           _StatsTab(
                             me: widget.me,
@@ -482,7 +707,7 @@ class _PlayerChip extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         textAlign: alignEnd ? TextAlign.end : TextAlign.start,
-        style: TextStyle(
+        style: const TextStyle(
           fontFamily: AppFonts.primary,
           color: Colors.white,
           fontSize: 11,
@@ -600,20 +825,26 @@ class _OpponentSearchBarState extends State<_OpponentSearchBar> {
                   controller: widget.controller,
                   focusNode: widget.focusNode,
                   style: const TextStyle(
-                    fontFamily: AppFonts.light,
+                    fontFamily: AppFonts.primary,
                     fontSize: 12,
                     color: Color(0xFF3B3B3B),
+                    fontWeight: FontWeight.w500,
                   ),
                   decoration: InputDecoration(
                     hintText: l10n.opponentTagHint,
                     hintStyle: TextStyle(
-                      fontFamily: AppFonts.light,
+                      fontFamily: AppFonts.primary,
                       fontSize: 12,
                       color: Colors.grey.shade400.withValues(alpha: 0.85),
                     ),
                     border: InputBorder.none,
                     isDense: true,
                   ),
+                  textCapitalization: TextCapitalization.characters,
+                  inputFormatters: [
+                    const UpperCaseTextFormatter(),
+                    FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                  ],
                   textInputAction: TextInputAction.search,
                   onSubmitted: (_) => widget.onSearch(),
                   onTap: widget.onTapBar,
@@ -634,6 +865,147 @@ class _OpponentSearchBarState extends State<_OpponentSearchBar> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _RecentCompareTagsPanel extends StatelessWidget {
+  final List<RecentCompareTag> entries;
+  final bool hasAnyHistory;
+  final void Function(RecentCompareTag entry) onSelect;
+  final void Function(String tag) onRemove;
+  final VoidCallback onClearAll;
+
+  const _RecentCompareTagsPanel({
+    required this.entries,
+    required this.hasAnyHistory,
+    required this.onSelect,
+    required this.onRemove,
+    required this.onClearAll,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      constraints: const BoxConstraints(maxHeight: 220),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.18)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListView(
+        shrinkWrap: true,
+        padding: const EdgeInsets.only(bottom: 6),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 4, 4),
+            child: Row(
+              children: [
+                Icon(Icons.history_rounded, size: 16, color: colorScheme.primary),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    l10n.compareRecentSearches,
+                    style: TextStyle(
+                      fontFamily: AppFonts.primary,
+                      color: colorScheme.onPrimary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (hasAnyHistory)
+                  TextButton(
+                    onPressed: onClearAll,
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      l10n.compareClearRecent,
+                      style: TextStyle(
+                        fontFamily: AppFonts.primary,
+                        color: colorScheme.primary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (entries.isEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 10),
+              child: Text(
+                l10n.compareNoRecentMatches,
+                style: TextStyle(
+                  fontFamily: AppFonts.light,
+                  color: Colors.grey.shade600,
+                  fontSize: 11,
+                ),
+              ),
+            )
+          else
+            for (var i = 0; i < entries.length; i++) ...[
+              if (i > 0)
+                Divider(height: 1, color: Colors.grey.shade200),
+              ListTile(
+                dense: true,
+                visualDensity: VisualDensity.compact,
+                leading: Icon(
+                  Icons.tag_rounded,
+                  size: 18,
+                  color: colorScheme.primary,
+                ),
+                title: Text(
+                  entries[i].displayTag,
+                  style: TextStyle(
+                    fontFamily: AppFonts.primary,
+                    color: colorScheme.onPrimary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                subtitle: entries[i].name == null
+                    ? null
+                    : Text(
+                        entries[i].name!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: AppFonts.light,
+                          color: Colors.grey.shade600,
+                          fontSize: 10,
+                        ),
+                      ),
+                trailing: IconButton(
+                  icon: Icon(
+                    Icons.close_rounded,
+                    size: 16,
+                    color: Colors.grey.shade500,
+                  ),
+                  tooltip: l10n.compareClearRecent,
+                  onPressed: () => onRemove(entries[i].tag),
+                ),
+                onTap: () => onSelect(entries[i]),
+              ),
+            ],
+        ],
       ),
     );
   }
@@ -1192,18 +1564,31 @@ class _ClanMateCompareTile extends StatelessWidget {
 class _CompareError extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
+  final bool isNotFound;
 
-  const _CompareError({required this.message, required this.onRetry});
+  const _CompareError({
+    required this.message,
+    required this.onRetry,
+    this.isNotFound = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, color: Colors.red, size: 40),
+            Icon(
+              isNotFound
+                  ? Icons.person_search_rounded
+                  : Icons.error_outline,
+              color: isNotFound ? colorScheme.primary : Colors.red,
+              size: 40,
+            ),
             const SizedBox(height: 12),
             Text(
               message,
@@ -1228,12 +1613,14 @@ class _SummaryTab extends StatelessWidget {
   final Player opponent;
   final Color youColor;
   final Color themColor;
+  final Color moodDark;
 
   const _SummaryTab({
     required this.me,
     required this.opponent,
     required this.youColor,
     required this.themColor,
+    required this.moodDark,
   });
 
   @override
@@ -1252,6 +1639,7 @@ class _SummaryTab extends StatelessWidget {
           opponentName: opponent.name,
           youColor: youColor,
           themColor: themColor,
+          moodDark: moodDark,
         ),
         const SizedBox(height: 14),
         Container(
@@ -1288,9 +1676,12 @@ class _SummaryTab extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _LegendDot(color: youColor, label: me.name),
-                  const SizedBox(width: 16),
-                  _LegendDot(color: themColor, label: opponent.name),
+                  CompareLegend(
+                    youColor: youColor,
+                    themColor: themColor,
+                    youLabel: me.name,
+                    themLabel: opponent.name,
+                  ),
                 ],
               ),
             ],
@@ -1301,6 +1692,8 @@ class _SummaryTab extends StatelessWidget {
           metrics: metrics,
           youColor: youColor,
           themColor: themColor,
+          youLabel: me.name,
+          themLabel: opponent.name,
         ),
       ],
     );
@@ -1313,6 +1706,7 @@ class _ScoreBanner extends StatelessWidget {
   final String opponentName;
   final Color youColor;
   final Color themColor;
+  final Color moodDark;
 
   const _ScoreBanner({
     required this.summary,
@@ -1320,18 +1714,21 @@ class _ScoreBanner extends StatelessWidget {
     required this.opponentName,
     required this.youColor,
     required this.themColor,
+    required this.moodDark,
   });
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 380),
+      curve: Curves.easeOutCubic,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.95),
-            Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.82),
+            moodDark.withValues(alpha: 0.95),
+            moodDark.withValues(alpha: 0.82),
           ],
         ),
         borderRadius: BorderRadius.circular(18),
@@ -1423,54 +1820,28 @@ class _ScoreColumn extends StatelessWidget {
   }
 }
 
-class _LegendDot extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _LegendDot({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontFamily: AppFonts.light,
-            color: Colors.grey.shade700,
-            fontSize: 10,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _HighlightsCard extends StatelessWidget {
   final List<CompareMetric> metrics;
   final Color youColor;
   final Color themColor;
+  final String youLabel;
+  final String themLabel;
 
   const _HighlightsCard({
     required this.metrics,
     required this.youColor,
     required this.themColor,
+    required this.youLabel,
+    required this.themLabel,
   });
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final youLeading = metrics.where((m) => m.winner == CompareWinner.you).take(4);
-    final themLeading = metrics.where((m) => m.winner == CompareWinner.them).take(4);
+    final youLeading =
+        metrics.where((m) => m.winner == CompareWinner.you).take(4);
+    final themLeading =
+        metrics.where((m) => m.winner == CompareWinner.them).take(4);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -1481,14 +1852,12 @@ class _HighlightsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            l10n.whereYouLead,
-            style: TextStyle(
-              fontFamily: AppFonts.primary,
-              color: Theme.of(context).colorScheme.onPrimary,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
+          CompareCardTitle(
+            title: l10n.whereYouLead,
+            youColor: youColor,
+            themColor: themColor,
+            youLabel: youLabel,
+            themLabel: themLabel,
           ),
           const SizedBox(height: 10),
           for (final m in youLeading)
@@ -1648,19 +2017,24 @@ class _GroupCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                title.toUpperCase(),
-                style: TextStyle(
-                  fontFamily: AppFonts.primary,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
+              Expanded(
+                child: Text(
+                  title.toUpperCase(),
+                  style: TextStyle(
+                    fontFamily: AppFonts.primary,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-              const Spacer(),
-              _LegendDot(color: youColor, label: youLabel),
-              const SizedBox(width: 8),
-              _LegendDot(color: themColor, label: themLabel),
+              CompareLegend(
+                youColor: youColor,
+                themColor: themColor,
+                youLabel: youLabel,
+                themLabel: themLabel,
+                dense: true,
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -1709,6 +2083,8 @@ class _AchievementsTab extends StatelessWidget {
           them: homeThem,
           youColor: youColor,
           themColor: themColor,
+          youLabel: me.name,
+          themLabel: opponent.name,
         ),
         const SizedBox(height: 12),
         CompareAchievementSummaryCard(
@@ -1717,6 +2093,8 @@ class _AchievementsTab extends StatelessWidget {
           them: bbThem,
           youColor: youColor,
           themColor: themColor,
+          youLabel: me.name,
+          themLabel: opponent.name,
         ),
         const SizedBox(height: 16),
         Text(
@@ -1736,6 +2114,8 @@ class _AchievementsTab extends StatelessWidget {
               match: match,
               youColor: youColor,
               themColor: themColor,
+              youLabel: me.name,
+              themLabel: opponent.name,
             ),
           ),
       ],
@@ -1743,7 +2123,7 @@ class _AchievementsTab extends StatelessWidget {
   }
 }
 
-class _TroopsTab extends StatelessWidget {
+class _TroopsTab extends StatefulWidget {
   final Player me;
   final Player opponent;
   final Color youColor;
@@ -1757,89 +2137,425 @@ class _TroopsTab extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final summaries = buildTroopGroupSummaries(me, opponent);
-    final grouped = troopMatchesGrouped(me, opponent);
-    final sections = TroopCatalog.troopDisplayOrder
-        .where((g) => grouped[g]?.isNotEmpty ?? false)
-        .toList();
+  State<_TroopsTab> createState() => _TroopsTabState();
+}
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      children: [
-        for (final summary in summaries) ...[
-          CompareTroopGroupSummaryCard(
-            summary: summary,
+class _TroopsTabState extends State<_TroopsTab> {
+  /// Section keys that are expanded. Empty set = all collapsed.
+  late final Set<String> _expanded;
+
+  late List<TroopGroupSummary> _summaries;
+  late Map<TroopGroup, List<TroopMatch>> _grouped;
+  late List<TroopGroup> _troopSections;
+  late List<TroopMatch> _heroes;
+  late Map<SpellGroup, List<TroopMatch>> _spellGrouped;
+  late List<SpellGroup> _spellSections;
+  late List<TroopMatch> _equipment;
+  late bool _hasAny;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = {'cat-troops'};
+    _recomputeMatches();
+  }
+
+  @override
+  void didUpdateWidget(covariant _TroopsTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.me != widget.me || oldWidget.opponent != widget.opponent) {
+      _recomputeMatches();
+    }
+  }
+
+  void _recomputeMatches() {
+    final me = widget.me;
+    final opponent = widget.opponent;
+
+    _summaries = buildTroopGroupSummaries(me, opponent);
+    _grouped = troopMatchesGrouped(me, opponent);
+    _troopSections = TroopCatalog.troopDisplayOrder
+        .where((g) => _grouped[g]?.isNotEmpty ?? false)
+        .toList();
+    _heroes = buildHeroMatches(me, opponent);
+    _spellGrouped = spellMatchesGrouped(me, opponent);
+    _spellSections = TroopCatalog.spellDisplayOrder
+        .where((g) => _spellGrouped[g]?.isNotEmpty ?? false)
+        .toList();
+    _equipment = buildEquipmentMatches(me, opponent);
+    _hasAny = _troopSections.isNotEmpty ||
+        _heroes.isNotEmpty ||
+        _spellSections.isNotEmpty ||
+        _equipment.isNotEmpty;
+  }
+
+  bool _isOpen(String key) => _expanded.contains(key);
+
+  void _toggle(String key) {
+    setState(() {
+      if (_expanded.contains(key)) {
+        _expanded.remove(key);
+      } else {
+        _expanded.add(key);
+      }
+    });
+  }
+
+  List<_TroopsListEntry> _buildEntries(AppLocalizations l10n) {
+    final items = <_TroopsListEntry>[];
+
+    for (final summary in _summaries) {
+      items.add(_TroopsListEntry.summary(summary));
+    }
+
+    if (!_hasAny) {
+      items.add(const _TroopsListEntry.empty());
+      return items;
+    }
+
+    items.add(const _TroopsListEntry.levelHeader());
+
+    if (_troopSections.isNotEmpty) {
+      items.add(
+        _TroopsListEntry.section(
+          sectionKey: 'cat-troops',
+          title: l10n.categoryTroops,
+          count: _troopSections.fold<int>(
+            0,
+            (sum, g) => sum + _grouped[g]!.length,
+          ),
+        ),
+      );
+      if (_isOpen('cat-troops')) {
+        for (final group in _troopSections) {
+          final sectionKey = 'troop-${group.name}';
+          items.add(
+            _TroopsListEntry.section(
+              sectionKey: sectionKey,
+              title: l10n.troopGroupLabel(group),
+              count: _grouped[group]!.length,
+              accent: TroopCatalog.troopGroupColor(group),
+              nested: true,
+            ),
+          );
+          if (_isOpen(sectionKey)) {
+            for (final match in _grouped[group]!) {
+              items.add(_TroopsListEntry.match(match, nested: true));
+            }
+          }
+        }
+      }
+    }
+
+    if (_heroes.isNotEmpty) {
+      items.add(
+        _TroopsListEntry.section(
+          sectionKey: 'cat-heroes',
+          title: l10n.categoryHeroes,
+          count: _heroes.length,
+        ),
+      );
+      if (_isOpen('cat-heroes')) {
+        for (final match in _heroes) {
+          items.add(_TroopsListEntry.match(match));
+        }
+      }
+    }
+
+    if (_spellSections.isNotEmpty) {
+      items.add(
+        _TroopsListEntry.section(
+          sectionKey: 'cat-spells',
+          title: l10n.categorySpells,
+          count: _spellSections.fold<int>(
+            0,
+            (sum, g) => sum + _spellGrouped[g]!.length,
+          ),
+        ),
+      );
+      if (_isOpen('cat-spells')) {
+        for (final group in _spellSections) {
+          final sectionKey = 'spell-${group.name}';
+          items.add(
+            _TroopsListEntry.section(
+              sectionKey: sectionKey,
+              title: l10n.spellGroupLabel(group),
+              count: _spellGrouped[group]!.length,
+              accent: TroopCatalog.spellGroupColor(group),
+              nested: true,
+            ),
+          );
+          if (_isOpen(sectionKey)) {
+            for (final match in _spellGrouped[group]!) {
+              items.add(_TroopsListEntry.match(match, nested: true));
+            }
+          }
+        }
+      }
+    }
+
+    if (_equipment.isNotEmpty) {
+      items.add(
+        _TroopsListEntry.section(
+          sectionKey: 'cat-equipment',
+          title: l10n.equipment,
+          count: _equipment.length,
+        ),
+      );
+      if (_isOpen('cat-equipment')) {
+        for (final match in _equipment) {
+          items.add(_TroopsListEntry.match(match));
+        }
+      }
+    }
+
+    return items;
+  }
+
+  Widget _buildEntry(BuildContext context, _TroopsListEntry entry) {
+    final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
+    final me = widget.me;
+    final opponent = widget.opponent;
+    final youColor = widget.youColor;
+    final themColor = widget.themColor;
+
+    return switch (entry.kind) {
+      _TroopsListEntryKind.summary => Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: CompareTroopGroupSummaryCard(
+            summary: entry.summary!,
             youColor: youColor,
             themColor: themColor,
+            youLabel: me.name,
+            themLabel: opponent.name,
           ),
-          const SizedBox(height: 10),
-        ],
-        if (sections.isNotEmpty) ...[
-          Text(
-            l10n.levelPerTroop,
+        ),
+      _TroopsListEntryKind.empty => Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Text(
+            l10n.noUnitsToCompare,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: AppFonts.light,
+              color: Colors.grey.shade600,
+              fontSize: 11,
+            ),
+          ),
+        ),
+      _TroopsListEntryKind.levelHeader => Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Text(
+            l10n.levelPerUnit,
             style: TextStyle(
               fontFamily: AppFonts.primary,
-              color: Theme.of(context).colorScheme.onPrimary,
+              color: colorScheme.onPrimary,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 10),
-          for (final group in sections) ...[
-            Row(
-              children: [
+        ),
+      _TroopsListEntryKind.section => Padding(
+          padding: EdgeInsets.only(bottom: entry.nested ? 8 : 10),
+          child: _CompareSectionHeader(
+            title: entry.title!,
+            count: entry.count!,
+            expanded: _isOpen(entry.sectionKey!),
+            onToggle: () => _toggle(entry.sectionKey!),
+            accent: entry.accent,
+            nested: entry.nested,
+          ),
+        ),
+      _TroopsListEntryKind.match => Padding(
+          padding: EdgeInsets.fromLTRB(
+            entry.nested ? 18 : 10,
+            0,
+            10,
+            8,
+          ),
+          child: CompareTroopMatchTile(
+            match: entry.match!,
+            youColor: youColor,
+            themColor: themColor,
+            youLabel: me.name,
+            themLabel: opponent.name,
+          ),
+        ),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = _buildEntries(context.l10n);
+
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => _buildEntry(context, entries[index]),
+              childCount: entries.length,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+enum _TroopsListEntryKind { summary, empty, levelHeader, section, match }
+
+class _TroopsListEntry {
+  final _TroopsListEntryKind kind;
+  final TroopGroupSummary? summary;
+  final String? sectionKey;
+  final String? title;
+  final int? count;
+  final Color? accent;
+  final bool nested;
+  final TroopMatch? match;
+
+  const _TroopsListEntry._({
+    required this.kind,
+    this.summary,
+    this.sectionKey,
+    this.title,
+    this.count,
+    this.accent,
+    this.nested = false,
+    this.match,
+  });
+
+  const _TroopsListEntry.empty()
+      : this._(kind: _TroopsListEntryKind.empty);
+
+  const _TroopsListEntry.levelHeader()
+      : this._(kind: _TroopsListEntryKind.levelHeader);
+
+  factory _TroopsListEntry.summary(TroopGroupSummary summary) =>
+      _TroopsListEntry._(
+        kind: _TroopsListEntryKind.summary,
+        summary: summary,
+      );
+
+  factory _TroopsListEntry.section({
+    required String sectionKey,
+    required String title,
+    required int count,
+    Color? accent,
+    bool nested = false,
+  }) =>
+      _TroopsListEntry._(
+        kind: _TroopsListEntryKind.section,
+        sectionKey: sectionKey,
+        title: title,
+        count: count,
+        accent: accent,
+        nested: nested,
+      );
+
+  factory _TroopsListEntry.match(TroopMatch match, {bool nested = false}) =>
+      _TroopsListEntry._(
+        kind: _TroopsListEntryKind.match,
+        match: match,
+        nested: nested,
+      );
+}
+
+class _CompareSectionHeader extends StatelessWidget {
+  final String title;
+  final int count;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final Color? accent;
+  final bool nested;
+
+  const _CompareSectionHeader({
+    required this.title,
+    required this.count,
+    required this.expanded,
+    required this.onToggle,
+    this.accent,
+    this.nested = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: nested ? colorScheme.secondary.withValues(alpha: 0.12) : Colors.white,
+        borderRadius: BorderRadius.circular(nested ? 12 : 14),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: nested ? 0.12 : 0.18),
+        ),
+      ),
+      child: InkWell(
+        onTap: onToggle,
+        borderRadius: BorderRadius.circular(nested ? 12 : 14),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: nested ? 10 : 12,
+            vertical: nested ? 10 : 12,
+          ),
+          child: Row(
+            children: [
+              if (accent != null) ...[
                 Container(
                   width: 4,
                   height: 16,
                   decoration: BoxDecoration(
-                    color: TroopCatalog.troopGroupColor(group),
+                    color: accent,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  l10n.troopGroupLabel(group).toUpperCase(),
+              ],
+              Expanded(
+                child: Text(
+                  title.toUpperCase(),
                   style: TextStyle(
                     fontFamily: AppFonts.primary,
-                    color: Theme.of(context).colorScheme.onPrimary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
+                    color: colorScheme.onPrimary,
+                    fontSize: nested ? 10 : 11,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            for (final match in grouped[group]!)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: CompareTroopMatchTile(
-                  match: match,
-                  youColor: youColor,
-                  themColor: themColor,
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '$count',
+                  style: TextStyle(
+                    fontFamily: AppFonts.primary,
+                    color: colorScheme.primary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            const SizedBox(height: 8),
-          ],
-        ] else
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              l10n.noSharedTroops,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: AppFonts.light,
-                color: Colors.grey.shade600,
-                fontSize: 11,
+              const SizedBox(width: 4),
+              Icon(
+                expanded
+                    ? Icons.expand_less_rounded
+                    : Icons.expand_more_rounded,
+                size: 20,
+                color: colorScheme.onPrimary.withValues(alpha: 0.7),
               ),
-            ),
+            ],
           ),
-      ],
+        ),
+      ),
     );
   }
 }

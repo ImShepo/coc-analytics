@@ -1,4 +1,5 @@
 import 'package:coc/config/helpers/achievement_utils.dart';
+import 'package:coc/config/helpers/coc_unit_image.dart';
 import 'package:coc/config/helpers/troop_catalog.dart';
 import 'package:coc/domain/entities/player.dart';
 
@@ -63,19 +64,19 @@ class AchievementMatch {
     required this.theirs,
   });
 
+  /// Trophy only when one side clearly leads by completion or star count.
+  /// Same stars (or both finished with the same stars) → [CompareWinner.tie].
   CompareWinner get winner {
     final youDone = yours.target > 0 && yours.value >= yours.target;
     final themDone = theirs.target > 0 && theirs.value >= theirs.target;
+
     if (youDone && !themDone) return CompareWinner.you;
     if (themDone && !youDone) return CompareWinner.them;
-    if (youDone && themDone) {
-      if (yours.stars > theirs.stars) return CompareWinner.you;
-      if (theirs.stars > yours.stars) return CompareWinner.them;
-    }
-    final youRatio = yours.target == 0 ? 0.0 : yours.value / yours.target;
-    final themRatio = theirs.target == 0 ? 0.0 : theirs.value / theirs.target;
-    if (youRatio > themRatio) return CompareWinner.you;
-    if (themRatio > youRatio) return CompareWinner.them;
+
+    if (yours.stars > theirs.stars) return CompareWinner.you;
+    if (theirs.stars > yours.stars) return CompareWinner.them;
+
+    // Identical star count (including both "Completado") → nobody gets the cup.
     return CompareWinner.tie;
   }
 }
@@ -182,6 +183,55 @@ CompareSummary buildCompareSummary(List<CompareMetric> metrics) {
   return CompareSummary(youWins: youWins, themWins: themWins, ties: ties);
 }
 
+CompareWinner compareWinnerFromCounts(int youWins, int themWins) {
+  if (youWins > themWins) return CompareWinner.you;
+  if (themWins > youWins) return CompareWinner.them;
+  return CompareWinner.tie;
+}
+
+CompareWinner tabWinnerFromMetrics(List<CompareMetric> metrics) {
+  final summary = buildCompareSummary(metrics);
+  return compareWinnerFromCounts(summary.youWins, summary.themWins);
+}
+
+CompareWinner tabWinnerFromAchievements(Player you, Player them) {
+  var youWins = 0;
+  var themWins = 0;
+  for (final match in buildAchievementMatches(you, them)) {
+    switch (match.winner) {
+      case CompareWinner.you:
+        youWins++;
+      case CompareWinner.them:
+        themWins++;
+      case CompareWinner.tie:
+        break;
+    }
+  }
+  return compareWinnerFromCounts(youWins, themWins);
+}
+
+CompareWinner tabWinnerFromUnits(Player you, Player them) {
+  final matches = [
+    ...buildTroopMatches(you, them),
+    ...buildHeroMatches(you, them),
+    ...buildSpellMatches(you, them),
+    ...buildEquipmentMatches(you, them),
+  ];
+  var youWins = 0;
+  var themWins = 0;
+  for (final match in matches) {
+    switch (match.winner) {
+      case CompareWinner.you:
+        youWins++;
+      case CompareWinner.them:
+        themWins++;
+      case CompareWinner.tie:
+        break;
+    }
+  }
+  return compareWinnerFromCounts(youWins, themWins);
+}
+
 List<RadarAxis> buildRadarAxes(Player you, Player them) {
   double norm(int a, int b) {
     final max = [a, b, 1].reduce((x, y) => x > y ? x : y);
@@ -254,19 +304,27 @@ AchievementStats builderStats(Player player) =>
 
 class TroopMatch {
   final String name;
-  final TroopGroup group;
+  final UnitCategory category;
+  final TroopGroup? group;
+  final SpellGroup? spellGroup;
   final int youLevel;
   final int themLevel;
   final int youMax;
   final int themMax;
+  final bool youSuperActive;
+  final bool themSuperActive;
 
   const TroopMatch({
     required this.name,
-    required this.group,
+    required this.category,
+    this.group,
+    this.spellGroup,
     required this.youLevel,
     required this.themLevel,
     required this.youMax,
     required this.themMax,
+    this.youSuperActive = false,
+    this.themSuperActive = false,
   });
 
   CompareWinner get winner {
@@ -304,18 +362,21 @@ List<TroopMatch> buildTroopMatches(Player you, Player them) {
     matches.add(
       TroopMatch(
         name: yours.name,
+        category: UnitCategory.troop,
         group: TroopCatalog.troopGroupFor(yours.name, yours.village),
         youLevel: yours.level,
         themLevel: theirs.level,
         youMax: yours.maxLevel,
         themMax: theirs.maxLevel,
+        youSuperActive: yours.superTroopIsActive,
+        themSuperActive: theirs.superTroopIsActive,
       ),
     );
   }
 
   matches.sort((a, b) {
-    final orderA = TroopCatalog.troopDisplayOrder.indexOf(a.group);
-    final orderB = TroopCatalog.troopDisplayOrder.indexOf(b.group);
+    final orderA = TroopCatalog.troopDisplayOrder.indexOf(a.group!);
+    final orderB = TroopCatalog.troopDisplayOrder.indexOf(b.group!);
     if (orderA != orderB) return orderA.compareTo(orderB);
     if (a.winner != b.winner) {
       if (a.winner == CompareWinner.you) return -1;
@@ -330,7 +391,7 @@ List<TroopMatch> buildTroopMatches(Player you, Player them) {
 Map<TroopGroup, List<TroopMatch>> troopMatchesGrouped(Player you, Player them) {
   final map = <TroopGroup, List<TroopMatch>>{};
   for (final match in buildTroopMatches(you, them)) {
-    map.putIfAbsent(match.group, () => []).add(match);
+    map.putIfAbsent(match.group!, () => []).add(match);
   }
   return map;
 }
@@ -369,4 +430,77 @@ List<TroopGroupSummary> buildTroopGroupSummaries(Player you, Player them) {
       )
       .where((s) => s.youTotal > 0 || s.themTotal > 0)
       .toList();
+}
+
+List<TroopMatch> _buildNamedUnitMatches({
+  required List<HeroEquipment> yoursList,
+  required List<HeroEquipment> theirsList,
+  required UnitCategory category,
+  SpellGroup Function(String name)? spellGroupFor,
+}) {
+  final themByName = {for (final t in theirsList) t.name: t};
+  final matches = <TroopMatch>[];
+
+  for (final yours in yoursList) {
+    if (yours.maxLevel <= 0) continue;
+    final theirs = themByName[yours.name];
+    if (theirs == null) continue;
+
+    matches.add(
+      TroopMatch(
+        name: yours.name,
+        category: category,
+        spellGroup: spellGroupFor?.call(yours.name),
+        youLevel: yours.level,
+        themLevel: theirs.level,
+        youMax: yours.maxLevel,
+        themMax: theirs.maxLevel,
+      ),
+    );
+  }
+
+  matches.sort((a, b) {
+    if (a.spellGroup != null && b.spellGroup != null) {
+      final orderA = TroopCatalog.spellDisplayOrder.indexOf(a.spellGroup!);
+      final orderB = TroopCatalog.spellDisplayOrder.indexOf(b.spellGroup!);
+      if (orderA != orderB) return orderA.compareTo(orderB);
+    }
+    if (a.winner != b.winner) {
+      if (a.winner == CompareWinner.you) return -1;
+      if (b.winner == CompareWinner.you) return 1;
+    }
+    return a.name.compareTo(b.name);
+  });
+
+  return matches;
+}
+
+List<TroopMatch> buildHeroMatches(Player you, Player them) =>
+    _buildNamedUnitMatches(
+      yoursList: you.heroes,
+      theirsList: them.heroes,
+      category: UnitCategory.hero,
+    );
+
+List<TroopMatch> buildSpellMatches(Player you, Player them) =>
+    _buildNamedUnitMatches(
+      yoursList: you.spells,
+      theirsList: them.spells,
+      category: UnitCategory.spell,
+      spellGroupFor: TroopCatalog.spellGroupFor,
+    );
+
+List<TroopMatch> buildEquipmentMatches(Player you, Player them) =>
+    _buildNamedUnitMatches(
+      yoursList: you.heroEquipment,
+      theirsList: them.heroEquipment,
+      category: UnitCategory.equipment,
+    );
+
+Map<SpellGroup, List<TroopMatch>> spellMatchesGrouped(Player you, Player them) {
+  final map = <SpellGroup, List<TroopMatch>>{};
+  for (final match in buildSpellMatches(you, them)) {
+    map.putIfAbsent(match.spellGroup ?? SpellGroup.other, () => []).add(match);
+  }
+  return map;
 }

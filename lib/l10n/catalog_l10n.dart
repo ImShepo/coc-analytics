@@ -26,4 +26,13 @@ extension CatalogL10n on AppLocalizations {
         BuildingGroup.traps => buildingGroupTraps,
         BuildingGroup.builderBase => buildingGroupBuilderBase,
       };
+
+  String houseElementTypeLabel(String type) => switch (type) {
+        'ground' => houseTypeGround,
+        'roof' => houseTypeRoof,
+        'walls' => houseTypeWalls,
+        'decoration' || 'deco' => houseTypeDecoration,
+        'foot' => houseTypeFoot,
+        _ => houseTypeUnknown,
+      };
 }

@@ -4,284 +4,275 @@ import 'package:coc/config/helpers/clan_tag.dart';
 import 'package:coc/config/theme/app_fonts.dart';
 import 'package:coc/domain/entities/clan.dart';
 import 'package:coc/l10n/locale_extensions.dart';
-import 'package:coc/presentation/widgets/backgrounds/app_screen_background.dart';
-import 'package:coc/presentation/widgets/backgrounds/app_screen_background_variant.dart';
-import 'package:coc/presentation/widgets/backgrounds/app_screen_content_scrim.dart';
 import 'package:coc/presentation/widgets/coc_network_image.dart';
-import 'package:coc/presentation/widgets/liquid_glass.dart';
 import 'package:flutter/material.dart';
 
 typedef SearchClansCallback = Future<List<Clan>> Function(String query);
 
-class SearchClanDelegate extends SearchDelegate<Clan?> {
-  final SearchClansCallback searchClans;
-  List<Clan> initialClans;
-
-  final StreamController<List<Clan>> debouncedClans =
-      StreamController.broadcast();
-  final StreamController<bool> isLoadingStream =
-      StreamController.broadcast();
-
-  Timer? _debounceTimer;
-  String _lastQuery = '';
-
-  SearchClanDelegate({
-    required this.searchClans,
-    required this.initialClans,
-    required String searchFieldLabel,
-  }) : super(
+/// Opens a lightweight clan search page (avoids Material [showSearch] jank).
+Future<Clan?> openClanSearch(
+  BuildContext context, {
+  required String searchFieldLabel,
+  required SearchClansCallback searchClans,
+  // Kept for call-site compatibility; ignored so the first frame stays empty.
+  List<Clan> initialClans = const [],
+  String query = '',
+}) {
+  return Navigator.of(context).push<Clan?>(
+    PageRouteBuilder<Clan?>(
+      opaque: true,
+      transitionDuration: const Duration(milliseconds: 200),
+      reverseTransitionDuration: const Duration(milliseconds: 160),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return ClanSearchScreen(
           searchFieldLabel: searchFieldLabel,
-          textInputAction: TextInputAction.search,
-        ) {
-    leadingWidth = 42;
-    automaticallyImplyLeading = false;
-  }
+          searchClans: searchClans,
+        );
+      },
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+          child: child,
+        );
+      },
+    ),
+  );
+}
 
-  void _disposeStreams() {
-    _debounceTimer?.cancel();
-    if (!debouncedClans.isClosed) debouncedClans.close();
-    if (!isLoadingStream.isClosed) isLoadingStream.close();
+class ClanSearchScreen extends StatefulWidget {
+  final String searchFieldLabel;
+  final SearchClansCallback searchClans;
+
+  const ClanSearchScreen({
+    super.key,
+    required this.searchFieldLabel,
+    required this.searchClans,
+  });
+
+  @override
+  State<ClanSearchScreen> createState() => _ClanSearchScreenState();
+}
+
+class _ClanSearchScreenState extends State<ClanSearchScreen> {
+  final _controller = TextEditingController();
+  final _focusNode = FocusNode();
+
+  Timer? _debounce;
+  List<Clan> _clans = const [];
+  bool _loading = false;
+  String _lastSubmitted = '';
+
+  @override
+  void initState() {
+    super.initState();
+    // Focus after first paint so open stays cheap.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusNode.requestFocus();
+    });
   }
 
   @override
   void dispose() {
-    _disposeStreams();
+    _debounce?.cancel();
+    _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
-  @override
-  void close(BuildContext context, Clan? result) {
-    _disposeStreams();
-    super.close(context, result);
-  }
+  void _onChanged(String value) {
+    _debounce?.cancel();
 
-  void _onQueryChanged(String query) {
-    if (query == _lastQuery) return;
-    _lastQuery = query;
+    final trimmed = value.trim();
 
-    isLoadingStream.add(true);
+    if (trimmed.isEmpty) {
+      setState(() {
+        _clans = const [];
+        _loading = false;
+        _lastSubmitted = '';
+      });
+      return;
+    }
 
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
-      final clans = await searchClans(query);
-      initialClans = clans;
-      if (!debouncedClans.isClosed) {
-        debouncedClans.add(clans);
-      }
-      if (!isLoadingStream.isClosed) {
-        isLoadingStream.add(false);
+    if (trimmed == _lastSubmitted) {
+      setState(() {}); // refresh clear button / chrome
+      return;
+    }
+
+    setState(() => _loading = true);
+
+    _debounce = Timer(const Duration(milliseconds: 450), () async {
+      _lastSubmitted = trimmed;
+      try {
+        final clans = await widget.searchClans(trimmed);
+        if (!mounted || _lastSubmitted != trimmed) return;
+        setState(() {
+          _clans = clans;
+          _loading = false;
+        });
+      } catch (_) {
+        if (!mounted || _lastSubmitted != trimmed) return;
+        setState(() {
+          _clans = const [];
+          _loading = false;
+        });
       }
     });
   }
 
   @override
-  ThemeData appBarTheme(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final borderColor = colorScheme.primary.withValues(alpha: 0.2);
-    final focusedBorderColor = colorScheme.primary.withValues(alpha: 0.45);
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final query = _controller.text.trim();
 
-    return theme.copyWith(
-      scaffoldBackgroundColor: Colors.transparent,
-      appBarTheme: theme.appBarTheme.copyWith(
-        backgroundColor: Colors.transparent,
+    return Scaffold(
+      backgroundColor: const Color(0xFFF3F7F1),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFF3F7F1),
         elevation: 0,
         scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        titleSpacing: 8,
-        titleTextStyle: TextStyle(
-          fontFamily: AppFonts.primary,
-          fontSize: 12,
-          color: colorScheme.onPrimary,
-          height: 1.2,
-          fontWeight: FontWeight.w500,
+        leadingWidth: 44,
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 18,
+            color: colorScheme.onPrimary,
+          ),
         ),
-      ),
-      textTheme: theme.textTheme.copyWith(
-        titleLarge: TextStyle(
-          fontFamily: AppFonts.primary,
-          fontSize: 12,
-          color: colorScheme.onPrimary,
-          height: 1.2,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: Colors.white,
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        hintStyle: TextStyle(
-          fontFamily: AppFonts.light,
-          fontSize: 12,
-          color: Colors.grey.shade400.withValues(alpha: 0.9),
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: borderColor),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: borderColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: focusedBorderColor, width: 1.5),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget? buildLeading(BuildContext context) {
-    return GlassBackLeading(
-      onPressed: () => close(context, null),
-    );
-  }
-
-  @override
-  List<Widget>? buildActions(BuildContext context) {
-    return [
-      StreamBuilder<bool>(
-        initialData: false,
-        stream: isLoadingStream.stream,
-        builder: (context, snapshot) {
-          if (snapshot.data ?? false) {
-            return const Padding(
-              padding: EdgeInsets.only(right: 12),
-              child: Center(
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            );
-          }
-
-          if (query.isEmpty) return const SizedBox(width: 8);
-
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: GlassIconButton(
-              icon: Icons.close_rounded,
-              size: 28,
-              iconSize: 16,
-              onPressed: () => query = '',
+        titleSpacing: 0,
+        title: TextField(
+          controller: _controller,
+          focusNode: _focusNode,
+          textInputAction: TextInputAction.search,
+          onChanged: _onChanged,
+          style: TextStyle(
+            fontFamily: AppFonts.primary,
+            fontSize: 14,
+            color: colorScheme.onPrimary,
+            fontWeight: FontWeight.w500,
+          ),
+          decoration: InputDecoration(
+            hintText: widget.searchFieldLabel,
+            hintStyle: TextStyle(
+              fontFamily: AppFonts.light,
+              fontSize: 13,
+              color: Colors.grey.shade500,
             ),
-          );
-        },
-      ),
-    ];
-  }
-
-  Widget _screenBackground() {
-    return const Stack(
-      fit: StackFit.expand,
-      children: [
-        AppScreenBackground(variant: AppScreenBackgroundVariant.clan),
-        AppScreenContentScrim(),
-      ],
-    );
-  }
-
-  Widget _buildResultsBody(BuildContext context) {
-    final l10n = context.l10n;
-
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        _screenBackground(),
-        StreamBuilder<bool>(
-          initialData: false,
-          stream: isLoadingStream.stream,
-          builder: (context, loadingSnapshot) {
-            final isLoading = loadingSnapshot.data ?? false;
-
-            return StreamBuilder<List<Clan>>(
-              initialData: initialClans,
-              stream: debouncedClans.stream,
-              builder: (context, snapshot) {
-                final clans = snapshot.data ?? [];
-
-                if (query.trim().isEmpty) {
-                  return _SearchMessage(
-                    icon: Icons.groups_rounded,
-                    message: l10n.searchClanQueryHint,
-                  );
-                }
-
-                if (isLoading && clans.isEmpty) {
-                  return const Center(
-                    child: SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: CircularProgressIndicator(strokeWidth: 2.5),
+            filled: true,
+            fillColor: Colors.white,
+            isDense: true,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: colorScheme.primary.withValues(alpha: 0.2),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: colorScheme.primary.withValues(alpha: 0.2),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: colorScheme.primary.withValues(alpha: 0.45),
+                width: 1.5,
+              ),
+            ),
+            suffixIcon: query.isEmpty
+                ? null
+                : IconButton(
+                    onPressed: () {
+                      _controller.clear();
+                      _onChanged('');
+                    },
+                    icon: Icon(
+                      Icons.close_rounded,
+                      size: 18,
+                      color: colorScheme.onPrimary.withValues(alpha: 0.55),
                     ),
-                  );
-                }
-
-                if (!isLoading && clans.isEmpty) {
-                  return _SearchMessage(
-                    icon: Icons.search_off_rounded,
-                    message: l10n.searchClanNoResults,
-                  );
-                }
-
-                return ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-                  itemCount: clans.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) => _ClanItem(
-                    clan: clans[index],
-                    onClanSelected: (ctx, clan) => close(ctx, clan),
                   ),
-                );
-              },
-            );
-          },
+          ),
         ),
-      ],
+      ),
+      body: _buildBody(colorScheme, l10n.searchClanQueryHint, l10n.searchClanNoResults),
     );
   }
 
-  @override
-  Widget buildResults(BuildContext context) {
-    _onQueryChanged(query);
-    return _buildResultsBody(context);
-  }
+  Widget _buildBody(
+    ColorScheme colorScheme,
+    String emptyHint,
+    String noResults,
+  ) {
+    final query = _controller.text.trim();
 
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    _onQueryChanged(query);
-    return _buildResultsBody(context);
+    if (query.isEmpty) {
+      return _Message(
+        icon: Icons.groups_rounded,
+        message: emptyHint,
+        color: colorScheme.primary,
+      );
+    }
+
+    if (_loading && _clans.isEmpty) {
+      return const Center(
+        child: SizedBox(
+          width: 28,
+          height: 28,
+          child: CircularProgressIndicator(strokeWidth: 2.5),
+        ),
+      );
+    }
+
+    if (!_loading && _clans.isEmpty) {
+      return _Message(
+        icon: Icons.search_off_rounded,
+        message: noResults,
+        color: colorScheme.primary,
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+      // Keep decode work low while scrolling.
+      cacheExtent: 240,
+      itemCount: _clans.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final clan = _clans[index];
+        return _ClanTile(
+          clan: clan,
+          onTap: () => Navigator.of(context).pop(clan),
+        );
+      },
+    );
   }
 }
 
-class _SearchMessage extends StatelessWidget {
+class _Message extends StatelessWidget {
   final IconData icon;
   final String message;
+  final Color color;
 
-  const _SearchMessage({
+  const _Message({
     required this.icon,
     required this.message,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 36,
-              color: colorScheme.primary.withValues(alpha: 0.45),
-            ),
+            Icon(icon, size: 36, color: color.withValues(alpha: 0.45)),
             const SizedBox(height: 12),
             Text(
               message,
@@ -295,13 +286,13 @@ class _SearchMessage extends StatelessWidget {
   }
 }
 
-class _ClanItem extends StatelessWidget {
+class _ClanTile extends StatelessWidget {
   final Clan clan;
-  final void Function(BuildContext context, Clan clan) onClanSelected;
+  final VoidCallback onTap;
 
-  const _ClanItem({
+  const _ClanTile({
     required this.clan,
-    required this.onClanSelected,
+    required this.onTap,
   });
 
   @override
@@ -312,7 +303,7 @@ class _ClanItem extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => onClanSelected(context, clan),
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Ink(
           padding: const EdgeInsets.all(12),
@@ -322,29 +313,24 @@ class _ClanItem extends StatelessWidget {
             border: Border.all(
               color: colorScheme.primary.withValues(alpha: 0.16),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
           ),
           child: Row(
             children: [
               SizedBox(
-                width: 56,
-                height: 56,
+                width: 48,
+                height: 48,
                 child: CocNetworkImage(
-                  url: clan.badgeUrls.large,
-                  width: 56,
-                  height: 56,
+                  url: clan.badgeUrls.medium.isNotEmpty
+                      ? clan.badgeUrls.medium
+                      : clan.badgeUrls.small,
+                  width: 48,
+                  height: 48,
                   fit: BoxFit.cover,
-                  cacheWidth: 112,
+                  cacheWidth: 96,
                   filterQuality: FilterQuality.low,
                   animatedPlaceholder: false,
                   fadeIn: false,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
               const SizedBox(width: 12),
@@ -365,9 +351,28 @@ class _ClanItem extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 3),
-                    Text(
-                      displayTag,
-                      style: AppFonts.cardLabel(fontSize: 10),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            displayTag,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppFonts.cardLabel(fontSize: 10),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.groups_rounded,
+                          size: 13,
+                          color: colorScheme.onPrimary.withValues(alpha: 0.45),
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          '${clan.members}',
+                          style: AppFonts.cardLabel(fontSize: 10),
+                        ),
+                      ],
                     ),
                   ],
                 ),

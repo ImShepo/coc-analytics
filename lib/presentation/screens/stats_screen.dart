@@ -1,14 +1,17 @@
 import 'package:coc/config/helpers/achievement_utils.dart';
 import 'package:coc/config/helpers/human_formats.dart';
+import 'package:coc/config/helpers/town_hall_asset.dart';
 import 'package:coc/config/theme/app_fonts.dart';
 import 'package:coc/domain/entities/player.dart';
 import 'package:coc/l10n/app_localizations.dart';
+import 'package:coc/l10n/catalog_l10n.dart';
 import 'package:coc/l10n/locale_extensions.dart';
 import 'package:coc/presentation/screens/compare_screen.dart';
 import 'package:coc/presentation/widgets/achievement_tile.dart';
 import 'package:coc/presentation/widgets/backgrounds/app_screen_stack.dart';
 import 'package:coc/presentation/widgets/backgrounds/app_screen_background_variant.dart';
 import 'package:coc/presentation/widgets/coc_network_image.dart';
+import 'package:coc/presentation/widgets/label_chip.dart';
 import 'package:coc/presentation/widgets/liquid_glass.dart';
 import 'package:flutter/material.dart';
 
@@ -19,10 +22,6 @@ class StatsScreen extends StatelessWidget {
 
   const StatsScreen({super.key, required this.player});
 
-  String _townHallAsset(int level) {
-    return 'assets/images/townhall/TownHall${level.clamp(1, 16)}.png';
-  }
-
   String get _leagueIcon => player.league.iconUrls.medium.isEmpty
       ? 'http://clash-wiki.com/images/progress/leagues/no_league.png'
       : player.league.iconUrls.medium;
@@ -30,6 +29,7 @@ class StatsScreen extends StatelessWidget {
   bool get _hasLegendData =>
       player.legendStatistics.legendTrophies > 0 ||
       player.legendStatistics.currentSeason.trophies > 0 ||
+      player.legendStatistics.previousSeason.trophies > 0 ||
       player.legendStatistics.bestSeason.trophies > 0;
 
   List<Achievement> get _homeAchievements =>
@@ -123,8 +123,28 @@ class StatsScreen extends StatelessWidget {
                   expLevel: player.expLevel,
                   leagueName: player.league.name,
                   leagueIcon: _leagueIcon,
-                  townHallAsset: _townHallAsset(player.townHallLevel),
+                  townHallAsset: townHallAssetPath(player.townHallLevel),
                 ),
+                if (player.labels.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 36,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: player.labels.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (_, index) {
+                        final label = player.labels[index];
+                        return LabelChip(
+                          name: label.name,
+                          iconUrl: label.iconUrls.medium.isNotEmpty
+                              ? label.iconUrls.medium
+                              : label.iconUrls.small,
+                        );
+                      },
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 12),
                 _MetricsRow(
                   items: [
@@ -207,6 +227,12 @@ class StatsScreen extends StatelessWidget {
                           value:
                               '${player.legendStatistics.currentSeason.trophies} · #${player.legendStatistics.currentSeason.rank}',
                         ),
+                      if (player.legendStatistics.previousSeason.trophies > 0)
+                        _StatRow(
+                          label: l10n.previousSeason,
+                          value:
+                              '${player.legendStatistics.previousSeason.trophies} · #${player.legendStatistics.previousSeason.rank}',
+                        ),
                       if (player.legendStatistics.bestSeason.trophies > 0)
                         _StatRow(
                           label: l10n.bestSeason,
@@ -215,6 +241,10 @@ class StatsScreen extends StatelessWidget {
                         ),
                     ],
                   ),
+                ],
+                if (player.playerHouse.elements.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _PlayerHouseCard(house: player.playerHouse),
                 ],
                 const SizedBox(height: 12),
                 _ComparePromoCard(onTap: () => _openCompare(context)),
@@ -493,6 +523,109 @@ class _MetricsRow extends StatelessWidget {
   }
 }
 
+class _PlayerHouseCard extends StatelessWidget {
+  final PlayerHouse house;
+
+  const _PlayerHouseCard({required this.house});
+
+  IconData _iconFor(String type) => switch (type) {
+        'ground' => Icons.grass_rounded,
+        'roof' => Icons.roofing_rounded,
+        'walls' => Icons.fence_rounded,
+        'decoration' || 'deco' => Icons.yard_rounded,
+        'foot' => Icons.foundation_rounded,
+        _ => Icons.home_rounded,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
+    final sorted = [...house.elements]
+      ..sort((a, b) => a.type.compareTo(b.type));
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.playerHouse.toUpperCase(),
+            style: TextStyle(
+              fontFamily: AppFonts.primary,
+              color: colorScheme.onPrimary,
+              fontSize: 11,
+              letterSpacing: 0.5,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final element in sorted)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colorScheme.secondary.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colorScheme.primary.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _iconFor(element.type),
+                        size: 16,
+                        color: colorScheme.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        l10n.houseElementTypeLabel(element.type),
+                        style: TextStyle(
+                          fontFamily: AppFonts.primary,
+                          color: colorScheme.onPrimary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        l10n.houseElementId(element.id),
+                        style: TextStyle(
+                          fontFamily: AppFonts.light,
+                          color: colorScheme.onPrimary.withValues(alpha: 0.65),
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _StatsCard extends StatelessWidget {
   final String title;
   final List<Widget> children;
@@ -647,12 +780,12 @@ class _ComparePromoCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              LiquidGlassSurface(
+              const LiquidGlassSurface(
                 circular: true,
                 tintColor: Colors.white,
                 tintStrength: 0.3,
-                padding: const EdgeInsets.all(10),
-                child: const Icon(Icons.compare_arrows_rounded, color: Colors.white),
+                padding: EdgeInsets.all(10),
+                child: Icon(Icons.compare_arrows_rounded, color: Colors.white),
               ),
               const SizedBox(width: 12),
               Expanded(

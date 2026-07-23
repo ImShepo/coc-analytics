@@ -16,6 +16,10 @@ class MemoryCache<T> {
   void set(String key, T value) {
     _store[key] = _CacheEntry(value, DateTime.now().add(ttl));
   }
+
+  void remove(String key) => _store.remove(key);
+
+  void clear() => _store.clear();
 }
 
 class _CacheEntry<T> {

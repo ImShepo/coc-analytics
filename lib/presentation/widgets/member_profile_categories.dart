@@ -1,3 +1,4 @@
+import 'package:coc/config/helpers/errors.dart';
 import 'package:coc/config/helpers/player_tag.dart';
 import 'package:coc/config/theme/app_fonts.dart';
 import 'package:coc/l10n/locale_extensions.dart';
@@ -33,7 +34,7 @@ class _MemberProfileCategoriesState extends ConsumerState<MemberProfileCategorie
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final playerAsync = ref.watch(
-      playerProvider.select((players) => players[_tag]),
+      playerProvider.select((session) => session.byTag[_tag]),
     );
 
     return Column(
@@ -48,7 +49,7 @@ class _MemberProfileCategoriesState extends ConsumerState<MemberProfileCategorie
           const _LoadingCard()
         else if (playerAsync.hasError)
           _ErrorCard(
-            message: playerAsync.error.toString(),
+            message: localizedApiError(playerAsync.error!, l10n),
             onRetry: () =>
                 ref.read(playerProvider.notifier).loadPlayer(_tag, force: true),
           )

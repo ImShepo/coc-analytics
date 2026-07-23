@@ -1,7 +1,18 @@
-# Secrets
+# Secrets (local overrides only — never commit keys)
 .env
-.env.*
-!.env.example
+api/.env
+api/node_modules
+
+# Android upload signing
+android/key.properties
+android/upload-keystore.jks
+*.jks
+*.keystore
+
+# Committed env files (no secrets):
+# .env.development — local proxy URL
+# .env.production — Cloud Run URL
+# .env.example — template
 
 # Miscellaneous
 *.class
@@ -49,3 +60,4 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 /android/app/.cxx
+android/key.properties*
