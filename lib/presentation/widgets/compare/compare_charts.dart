@@ -1,9 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:coc/config/helpers/achievement_utils.dart';
-import 'package:coc/config/helpers/coc_unit_image.dart';
 import 'package:coc/config/helpers/player_compare.dart';
-import 'package:coc/config/helpers/troop_catalog.dart';
 import 'package:coc/config/theme/app_fonts.dart';
 import 'package:coc/l10n/catalog_l10n.dart';
 import 'package:coc/l10n/locale_extensions.dart';
@@ -191,13 +189,22 @@ class CompareDualBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final max = [you, them, 1].reduce((a, b) => a > b ? a : b);
-    final youRatio = you / max;
-    final themRatio = them / max;
     final winner = you > them
         ? CompareWinner.you
         : them > you
             ? CompareWinner.them
             : CompareWinner.tie;
+
+    // Higher value first; on a tie keep "you" on top for stable reading.
+    final rows = <({int value, Color color, bool isYou})>[
+      (value: you, color: youColor, isYou: true),
+      (value: them, color: themColor, isYou: false),
+    ]..sort((a, b) {
+        final byValue = b.value.compareTo(a.value);
+        if (byValue != 0) return byValue;
+        if (a.isYou == b.isYou) return 0;
+        return a.isYou ? -1 : 1;
+      });
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -217,15 +224,20 @@ class CompareDualBar extends StatelessWidget {
                 ),
               ),
               if (winner == CompareWinner.you)
-                Icon(Icons.arrow_back_rounded, size: 12, color: youColor)
+                Icon(Icons.emoji_events_rounded, size: 12, color: youColor)
               else if (winner == CompareWinner.them)
-                Icon(Icons.arrow_forward_rounded, size: 12, color: themColor),
+                Icon(Icons.emoji_events_rounded, size: 12, color: themColor),
             ],
           ),
           const SizedBox(height: 6),
-          _BarRow(value: you, ratio: youRatio, color: youColor, alignEnd: false),
-          const SizedBox(height: 4),
-          _BarRow(value: them, ratio: themRatio, color: themColor, alignEnd: true),
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0) const SizedBox(height: 4),
+            _BarRow(
+              value: rows[i].value,
+              ratio: rows[i].value / max,
+              color: rows[i].color,
+            ),
+          ],
         ],
       ),
     );
@@ -236,32 +248,29 @@ class _BarRow extends StatelessWidget {
   final int value;
   final double ratio;
   final Color color;
-  final bool alignEnd;
 
   const _BarRow({
     required this.value,
     required this.ratio,
     required this.color,
-    required this.alignEnd,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        if (!alignEnd)
-          SizedBox(
-            width: 42,
-            child: Text(
-              '$value',
-              style: TextStyle(
-                fontFamily: AppFonts.primary,
-                color: color,
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-              ),
+        SizedBox(
+          width: 48,
+          child: Text(
+            '$value',
+            style: TextStyle(
+              fontFamily: AppFonts.primary,
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
             ),
           ),
+        ),
         Expanded(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(4),
@@ -273,20 +282,123 @@ class _BarRow extends StatelessWidget {
             ),
           ),
         ),
-        if (alignEnd)
-          SizedBox(
-            width: 42,
-            child: Text(
-              '$value',
-              textAlign: TextAlign.end,
-              style: TextStyle(
-                fontFamily: AppFonts.primary,
-                color: color,
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-              ),
+      ],
+    );
+  }
+}
+
+/// Color key for you vs rival — use on every compare info card.
+class CompareLegend extends StatelessWidget {
+  final Color youColor;
+  final Color themColor;
+  final String youLabel;
+  final String themLabel;
+  final bool dense;
+
+  const CompareLegend({
+    super.key,
+    required this.youColor,
+    required this.themColor,
+    required this.youLabel,
+    required this.themLabel,
+    this.dense = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: _LegendDot(color: youColor, label: youLabel, dense: dense),
+        ),
+        SizedBox(width: dense ? 8 : 12),
+        Flexible(
+          child: _LegendDot(color: themColor, label: themLabel, dense: dense),
+        ),
+      ],
+    );
+  }
+}
+
+class _LegendDot extends StatelessWidget {
+  final Color color;
+  final String label;
+  final bool dense;
+
+  const _LegendDot({
+    required this.color,
+    required this.label,
+    this.dense = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: dense ? 8 : 10,
+          height: dense ? 8 : 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        SizedBox(width: dense ? 4 : 6),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: AppFonts.light,
+              color: Colors.grey.shade700,
+              fontSize: dense ? 9 : 10,
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class CompareCardTitle extends StatelessWidget {
+  final String title;
+  final Color youColor;
+  final Color themColor;
+  final String youLabel;
+  final String themLabel;
+
+  const CompareCardTitle({
+    super.key,
+    required this.title,
+    required this.youColor,
+    required this.themColor,
+    required this.youLabel,
+    required this.themLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            title.toUpperCase(),
+            style: TextStyle(
+              fontFamily: AppFonts.primary,
+              color: Theme.of(context).colorScheme.onPrimary,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        CompareLegend(
+          youColor: youColor,
+          themColor: themColor,
+          youLabel: youLabel,
+          themLabel: themLabel,
+          dense: true,
+        ),
       ],
     );
   }
@@ -298,6 +410,8 @@ class CompareAchievementSummaryCard extends StatelessWidget {
   final AchievementStats them;
   final Color youColor;
   final Color themColor;
+  final String youLabel;
+  final String themLabel;
 
   const CompareAchievementSummaryCard({
     super.key,
@@ -306,6 +420,8 @@ class CompareAchievementSummaryCard extends StatelessWidget {
     required this.them,
     required this.youColor,
     required this.themColor,
+    required this.youLabel,
+    required this.themLabel,
   });
 
   @override
@@ -327,14 +443,12 @@ class CompareAchievementSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            title.toUpperCase(),
-            style: TextStyle(
-              fontFamily: AppFonts.primary,
-              color: Theme.of(context).colorScheme.onPrimary,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
+          CompareCardTitle(
+            title: title,
+            youColor: youColor,
+            themColor: themColor,
+            youLabel: youLabel,
+            themLabel: themLabel,
           ),
           const SizedBox(height: 12),
           CompareDualBar(
@@ -356,7 +470,7 @@ class CompareAchievementSummaryCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _PctChip(
-                  label: l10n.yourProgress,
+                  label: youLabel,
                   value: you.completionRate,
                   color: youColor,
                 ),
@@ -364,7 +478,7 @@ class CompareAchievementSummaryCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _PctChip(
-                  label: l10n.rival,
+                  label: themLabel,
                   value: them.completionRate,
                   color: themColor,
                 ),
@@ -425,12 +539,16 @@ class CompareAchievementMatchTile extends StatelessWidget {
   final AchievementMatch match;
   final Color youColor;
   final Color themColor;
+  final String youLabel;
+  final String themLabel;
 
   const CompareAchievementMatchTile({
     super.key,
     required this.match,
     required this.youColor,
     required this.themColor,
+    required this.youLabel,
+    required this.themLabel,
   });
 
   @override
@@ -462,9 +580,10 @@ class CompareAchievementMatchTile extends StatelessWidget {
             children: [
               Expanded(
                 child: _SideStat(
-                  label: l10n.you,
+                  label: youLabel,
                   stars: match.yours.stars,
-                  done: match.yours.target > 0 && match.yours.value >= match.yours.target,
+                  done: match.yours.target > 0 &&
+                      match.yours.value >= match.yours.target,
                   color: youColor,
                   highlight: winner == CompareWinner.you,
                 ),
@@ -488,9 +607,10 @@ class CompareAchievementMatchTile extends StatelessWidget {
               ),
               Expanded(
                 child: _SideStat(
-                  label: l10n.rival,
+                  label: themLabel,
                   stars: match.theirs.stars,
-                  done: match.theirs.target > 0 && match.theirs.value >= match.theirs.target,
+                  done: match.theirs.target > 0 &&
+                      match.theirs.value >= match.theirs.target,
                   color: themColor,
                   highlight: winner == CompareWinner.them,
                   alignEnd: true,
@@ -561,12 +681,16 @@ class CompareTroopGroupSummaryCard extends StatelessWidget {
   final TroopGroupSummary summary;
   final Color youColor;
   final Color themColor;
+  final String youLabel;
+  final String themLabel;
 
   const CompareTroopGroupSummaryCard({
     super.key,
     required this.summary,
     required this.youColor,
     required this.themColor,
+    required this.youLabel,
+    required this.themLabel,
   });
 
   @override
@@ -588,27 +712,12 @@ class CompareTroopGroupSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 4,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: TroopCatalog.troopGroupColor(summary.group),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                context.l10n.troopGroupLabel(summary.group).toUpperCase(),
-                style: TextStyle(
-                  fontFamily: AppFonts.primary,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+          CompareCardTitle(
+            title: context.l10n.troopGroupLabel(summary.group),
+            youColor: youColor,
+            themColor: themColor,
+            youLabel: youLabel,
+            themLabel: themLabel,
           ),
           const SizedBox(height: 10),
           CompareDualBar(
@@ -637,12 +746,16 @@ class CompareTroopMatchTile extends StatelessWidget {
   final TroopMatch match;
   final Color youColor;
   final Color themColor;
+  final String youLabel;
+  final String themLabel;
 
   const CompareTroopMatchTile({
     super.key,
     required this.match,
     required this.youColor,
     required this.themColor,
+    required this.youLabel,
+    required this.themLabel,
   });
 
   @override
@@ -670,7 +783,7 @@ class CompareTroopMatchTile extends StatelessWidget {
                   height: 44,
                   child: CocUnitImageWidget(
                     name: match.name,
-                    category: UnitCategory.troop,
+                    category: match.category,
                     width: 44,
                     height: 44,
                     fit: BoxFit.contain,
@@ -679,17 +792,49 @@ class CompareTroopMatchTile extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  match.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: AppFonts.primary,
-                    color: Theme.of(context).colorScheme.onPrimary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    height: 1.2,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      match.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: AppFonts.primary,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    CompareLegend(
+                      youColor: youColor,
+                      themColor: themColor,
+                      youLabel: youLabel,
+                      themLabel: themLabel,
+                      dense: true,
+                    ),
+                    if (match.youSuperActive || match.themSuperActive) ...[
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: [
+                          if (match.youSuperActive)
+                            _SuperActivePill(
+                              label: youLabel,
+                              color: youColor,
+                            ),
+                          if (match.themSuperActive)
+                            _SuperActivePill(
+                              label: themLabel,
+                              color: themColor,
+                            ),
+                        ],
+                      ),
+                    ],
+                  ],
                 ),
               ),
               if (winner == CompareWinner.you)
@@ -716,6 +861,34 @@ class CompareTroopMatchTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SuperActivePill extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _SuperActivePill({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: const Color(0xFF6B2D8B).withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF6B2D8B).withValues(alpha: 0.35)),
+      ),
+      child: Text(
+        '${context.l10n.superTroopActiveBadge} · $label',
+        style: TextStyle(
+          fontFamily: AppFonts.primary,
+          color: color,
+          fontSize: 8,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

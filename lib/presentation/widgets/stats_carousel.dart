@@ -1,4 +1,5 @@
 import 'package:coc/l10n/locale_extensions.dart';
+import 'package:coc/config/helpers/town_hall_asset.dart';
 import 'package:coc/domain/entities/player.dart';
 import 'package:flutter/material.dart';
 import 'level_info.dart';
@@ -30,11 +31,6 @@ class StatsCarouselState extends State<StatsCarousel> {
     super.dispose();
   }
 
-  String _townHallAsset(int level) {
-    final assetLevel = level.clamp(1, 16);
-    return 'assets/images/townhall/TownHall$assetLevel.png';
-  }
-
   _StatSlide _slideForIndex(int index, BuildContext context) {
     final player = widget.player;
     final l10n = context.l10n;
@@ -45,18 +41,22 @@ class StatsCarouselState extends State<StatsCarousel> {
       case 0:
         return _StatSlide(
           title: l10n.levelTownHall,
-          imagePath: _townHallAsset(player.townHallLevel),
+          imagePath: townHallAssetPath(player.townHallLevel),
           levelText: '${player.townHallLevel}$weaponSuffix',
           leagueText: player.league.name,
-          leagueImagePath: 'assets/images/Titan_League.png',
+          leagueImageUrl: player.league.iconUrls.medium.isNotEmpty
+              ? player.league.iconUrls.medium
+              : player.league.iconUrls.small,
+          showAsLeague: true,
         );
       case 1:
         return _StatSlide(
           title: l10n.levelBuilderHall,
-          imagePath: _townHallAsset(player.builderHallLevel),
+          imagePath: townHallAssetPath(player.builderHallLevel),
           levelText: '${player.builderHallLevel}',
           leagueText: player.builderBaseLeague.name,
-          leagueImagePath: 'assets/images/Builder_Base_Platinum_League_2.png',
+          // Builder Base leagues have no iconUrls in the CoC API.
+          showAsLeague: true,
         );
       default:
         return _StatSlide(
@@ -64,7 +64,6 @@ class StatsCarouselState extends State<StatsCarousel> {
           imagePath: '',
           levelText: '',
           leagueText: '${player.clanCapitalContributions}',
-          leagueImagePath: '',
         );
     }
   }
@@ -113,7 +112,8 @@ class StatsCarouselState extends State<StatsCarousel> {
                                 imagePath: slide.imagePath,
                                 levelText: slide.levelText,
                                 leagueText: slide.leagueText,
-                                leagueImagePath: slide.leagueImagePath,
+                                leagueImageUrl: slide.leagueImageUrl,
+                                showAsLeague: slide.showAsLeague,
                               ),
                             ),
                           ),
@@ -161,13 +161,15 @@ class _StatSlide {
   final String imagePath;
   final String levelText;
   final String leagueText;
-  final String leagueImagePath;
+  final String leagueImageUrl;
+  final bool showAsLeague;
 
   const _StatSlide({
     required this.title,
     required this.imagePath,
     required this.levelText,
     required this.leagueText,
-    required this.leagueImagePath,
+    this.leagueImageUrl = '',
+    this.showAsLeague = false,
   });
 }

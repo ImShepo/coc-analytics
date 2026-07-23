@@ -9,6 +9,7 @@ class AppScreenStack extends StatelessWidget {
   final Widget child;
   final Color? primary;
   final Color? secondary;
+  final Color? mood;
   final bool showScrim;
 
   const AppScreenStack({
@@ -17,6 +18,7 @@ class AppScreenStack extends StatelessWidget {
     required this.child,
     this.primary,
     this.secondary,
+    this.mood,
     this.showScrim = true,
   });
 
@@ -25,10 +27,13 @@ class AppScreenStack extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        AppScreenBackground(
-          variant: variant,
-          primary: primary,
-          secondary: secondary,
+        RepaintBoundary(
+          child: AppScreenBackground(
+            variant: variant,
+            primary: primary,
+            secondary: secondary,
+            mood: mood,
+          ),
         ),
         if (showScrim) const AppScreenContentScrim(),
         child,

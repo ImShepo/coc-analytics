@@ -101,6 +101,21 @@ class AchievementTile extends StatelessWidget {
               ),
             ),
           ],
+          if (achievement.completionInfo != null &&
+              achievement.completionInfo!.trim().isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              achievement.completionInfo!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: AppFonts.primary,
+                color: colorScheme.primary.withValues(alpha: 0.85),
+                fontSize: 10,
+                height: 1.3,
+              ),
+            ),
+          ],
           const SizedBox(height: 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),

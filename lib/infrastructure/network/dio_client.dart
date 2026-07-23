@@ -6,12 +6,20 @@ class DioClient {
 
   static final Dio instance = Dio(
     BaseOptions(
-      baseUrl: 'https://api.clashofclans.com/v1',
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 15),
+      baseUrl: Environment.apiBaseUrl,
+      // Cloud Run + NAT cold starts can exceed 30s on the first request.
+      connectTimeout: Environment.usesRemoteProxy
+          ? const Duration(seconds: 60)
+          : const Duration(seconds: 15),
+      receiveTimeout: Environment.usesRemoteProxy
+          ? const Duration(seconds: 60)
+          : const Duration(seconds: 20),
       headers: {
-        'Authorization': 'Bearer ${Environment.cocKey}',
         'Accept': 'application/json',
+        // Direct Supercell calls (dev only). Production must use the proxy
+        // so the key never ships inside the app.
+        if (!Environment.usesProxy && Environment.cocKey.isNotEmpty)
+          'Authorization': 'Bearer ${Environment.cocKey}',
       },
     ),
   );

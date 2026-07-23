@@ -78,6 +78,153 @@ class AppLocalizationsPt extends AppLocalizations {
   String get signInButton => 'Entrar';
 
   @override
+  String get createAccountButton => 'Criar conta';
+
+  @override
+  String get signingIn => 'Entrando…';
+
+  @override
+  String get signingUp => 'Criando conta…';
+
+  @override
+  String get authFieldsRequired => 'Preencha todos os campos.';
+
+  @override
+  String get signOutButton => 'Sair';
+
+  @override
+  String get signOutConfirmMessage => 'Tem certeza de que deseja sair?';
+
+  @override
+  String get accountMenuTooltip => 'Conta';
+
+  @override
+  String get unlinkPlayerButton => 'Desvincular jogador';
+
+  @override
+  String get unlinkPlayerTitle => 'Desvincular jogador';
+
+  @override
+  String get unlinkPlayerMessage => 'Isso removerá o vínculo com seu jogador do Clash of Clans. Depois você poderá vincular outra tag.';
+
+  @override
+  String get cancel => 'Cancelar';
+
+  @override
+  String get linkPlayerTitle => 'Vincule seu jogador';
+
+  @override
+  String get linkPlayerSubtitle => 'Digite sua tag de jogador do Clash of Clans para carregar suas estatísticas. Se não joga, pode continuar sem vincular.';
+
+  @override
+  String get linkPlayerAltHelp => 'Não tem o jogo instalado? Busque seu clã, escolha seu nome e verifique com o API Token. Se não joga, pode continuar sem vincular.';
+
+  @override
+  String get linkPlayerTagPlaceholder => 'Tag do jogador (#ABC123)';
+
+  @override
+  String get linkPlayerTagRequired => 'Digite sua tag de jogador.';
+
+  @override
+  String get linkPlayerTagHelp => 'No Clash of Clans:\nAbra seu perfil (ícone da vila), vá em «Meu perfil» e copie a tag abaixo do seu nome.';
+
+  @override
+  String get linkPlayerTokenPlaceholder => 'API Token';
+
+  @override
+  String get linkPlayerTokenRequired => 'Digite o API Token do jogo.';
+
+  @override
+  String get linkPlayerTokenHelp => 'No Clash of Clans:\nVá em Ajustes → Mais ajustes, encontre a seção «API Token» e toque em «SHOW» para ver e copiar.';
+
+  @override
+  String get linkPlayerSeeGuide => 'Ver guia';
+
+  @override
+  String get linkPlayerTokenInvalid => 'Esse API Token não é válido para esta tag. Gere um novo no jogo e tente de novo.';
+
+  @override
+  String get linkPlayerPickMemberFirst => 'Escolha primeiro seu jogador na lista.';
+
+  @override
+  String linkPlayerVerifySelected(String name, String tag) {
+    return 'Verificar $name ($tag)';
+  }
+
+  @override
+  String get linkPlayerButton => 'Verificar e vincular';
+
+  @override
+  String get linkingPlayer => 'Verificando…';
+
+  @override
+  String get linkPlayerSkip => 'Continuar sem vincular';
+
+  @override
+  String get guestHomeUnlinkedTag => 'Sem vínculo';
+
+  @override
+  String get guestHomeLinkCta => 'Vincular meu jogador';
+
+  @override
+  String get guestHomeStatsHint => 'Vincule seu jogador para ver suas estatísticas.';
+
+  @override
+  String get guestHomeCompareHint => 'Vincule seu jogador para comparar com outros.';
+
+  @override
+  String get guestHomeClanHint => 'Vincule seu jogador para ver seu clã.';
+
+  @override
+  String get guestHomeCategoriesHint => 'Vincule seu jogador para ver tropas, heróis e mais.';
+
+  @override
+  String get linkPlayerModeTag => 'Por tag';
+
+  @override
+  String get linkPlayerModeClan => 'Por clã';
+
+  @override
+  String get linkPlayerSearchClan => 'Buscar clã';
+
+  @override
+  String get linkPlayerClanQueryHint => 'Por nome: pelo menos 3 letras. Por tag: inclua # (ex. #2GQYGPLOC).';
+
+  @override
+  String get linkPlayerPickClan => 'Escolha seu clã';
+
+  @override
+  String linkPlayerClanCount(int count) {
+    return '$count clãs';
+  }
+
+  @override
+  String linkPlayerMemberCount(int count) {
+    return '$count jogadores';
+  }
+
+  @override
+  String get linkPlayerPickMember => 'Escolha seu jogador';
+
+  @override
+  String get linkPlayerLookupOnline => 'Buscar tag online';
+
+  @override
+  String get browseHomeTitle => 'Explorar';
+
+  @override
+  String get browseHomeSubtitle => 'Busque clãs ou consulte qualquer jogador. Vincule o seu quando quiser ver suas estatísticas.';
+
+  @override
+  String get browseLookupPlayerTitle => 'Consultar jogador';
+
+  @override
+  String get browseLookupPlayerButton => 'Ver jogador';
+
+  @override
+  String get browseLinkPlayerCta => 'Vincular meu jogador';
+
+  @override
   String get termsAndConditions => 'Termos e condições de uso';
 
   @override
@@ -87,7 +234,45 @@ class AppLocalizationsPt extends AppLocalizations {
   String get retry => 'Tentar novamente';
 
   @override
+  String get dataRefreshing => 'Atualizando dados…';
+
+  @override
+  String get dataUpdatedJustNow => 'Atualizado agora';
+
+  @override
+  String dataUpdatedAgo(int minutes) {
+    return 'Atualizado há $minutes min';
+  }
+
+  @override
+  String get dataRefreshFailed => 'Não foi possível atualizar. Mostrando dados salvos.';
+
+  @override
   String get playerErrorForbiddenHint => 'Se você vir \"Forbidden\", atualize COC_KEY no arquivo .env com uma chave de API válida de developer.clashofclans.com';
+
+  @override
+  String get apiErrorPlayerNotFound => 'Não encontramos um jogador com essa tag. Confira se está escrita corretamente.';
+
+  @override
+  String get apiErrorBadRequest => 'Consulta inválida. Verifique a tag e tente de novo.';
+
+  @override
+  String get apiErrorUnauthorized => 'Não autorizado. Verifique a configuração da API.';
+
+  @override
+  String get apiErrorForbidden => 'Acesso negado. Verifique sua chave de API no arquivo .env.';
+
+  @override
+  String get apiErrorRateLimited => 'Muitas consultas. Aguarde um momento e tente de novo.';
+
+  @override
+  String get apiErrorServer => 'O servidor não está disponível. Tente mais tarde.';
+
+  @override
+  String get apiErrorNetwork => 'Erro de conexão. Verifique sua internet.';
+
+  @override
+  String get apiErrorUnexpected => 'Ocorreu um erro inesperado. Tente de novo.';
 
   @override
   String get yourStats => 'Suas Estatísticas';
@@ -144,6 +329,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String get equipment => 'Equipamento';
 
   @override
+  String get superTroopActive => 'Super ativa';
+
+  @override
+  String get superTroopActiveBadge => 'SUPER';
+
+  @override
+  String get levelPerUnit => 'Nível por unidade';
+
+  @override
+  String get noUnitsToCompare => 'Não há unidades em comum para comparar.';
+
+  @override
   String get troopsInProfile => 'tropas no seu perfil';
 
   @override
@@ -166,6 +363,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get compareSelfError => 'Você não pode se comparar consigo mesmo';
+
+  @override
+  String get compareRecentSearches => 'Pesquisas recentes';
+
+  @override
+  String get compareClearRecent => 'Limpar';
+
+  @override
+  String get compareNoRecentMatches => 'Sem coincidências no histórico';
 
   @override
   String get opponentDefaultName => 'Rival';
@@ -362,7 +568,49 @@ class AppLocalizationsPt extends AppLocalizations {
   String get currentSeason => 'Temporada atual';
 
   @override
+  String get previousSeason => 'Temporada anterior';
+
+  @override
   String get bestSeason => 'Melhor temporada';
+
+  @override
+  String get playerLabels => 'Etiquetas';
+
+  @override
+  String get equippedEquipment => 'Equipamento equipado';
+
+  @override
+  String get warResultWin => 'Vitória';
+
+  @override
+  String get warResultLose => 'Derrota';
+
+  @override
+  String get warResultTie => 'Empate';
+
+  @override
+  String get warLogEmpty => 'Não há guerras recentes no registro.';
+
+  @override
+  String get warLogLoadError => 'Não foi possível carregar o registro de guerra.';
+
+  @override
+  String get capitalRaidsEmpty => 'Não há assaltos recentes ao capital.';
+
+  @override
+  String get capitalRaidsLoadError => 'Não foi possível carregar o histórico de assaltos.';
+
+  @override
+  String get capitalRaidLoot => 'Saque total';
+
+  @override
+  String get capitalRaidRaids => 'Assaltos';
+
+  @override
+  String get capitalRaidAttacks => 'Ataques';
+
+  @override
+  String get capitalRaidDistricts => 'Distritos inimigos';
 
   @override
   String get achievementsHomeVillage => 'Conquistas · Principal';
@@ -411,6 +659,44 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get clanType => 'Tipo';
+
+  @override
+  String get familyFriendly => 'Adequado para famílias';
+
+  @override
+  String get familyFriendlyYes => 'Sim';
+
+  @override
+  String get familyFriendlyNo => 'Não';
+
+  @override
+  String get playerHouse => 'Casa do jogador';
+
+  @override
+  String get playerHouseEmpty => 'Nenhuma peça da casa configurada.';
+
+  @override
+  String get houseTypeGround => 'Chão';
+
+  @override
+  String get houseTypeRoof => 'Telhado';
+
+  @override
+  String get houseTypeWalls => 'Paredes';
+
+  @override
+  String get houseTypeDecoration => 'Decoração';
+
+  @override
+  String get houseTypeFoot => 'Base';
+
+  @override
+  String get houseTypeUnknown => 'Peça';
+
+  @override
+  String houseElementId(int id) {
+    return 'ID $id';
+  }
 
   @override
   String get requiredTrophies => 'Troféus exigidos';
@@ -563,7 +849,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get unitDetailContext => 'Contexto na sua vila';
 
   @override
-  String get searchClanQueryHint => 'Nome ou tag do clã';
+  String get searchClanQueryHint => 'Nome ou tag com # (ex. #2GQYGPLOC)';
 
   @override
   String get comparePlayersPromo => 'COMPARAR JOGADORES';
@@ -680,6 +966,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get capitalLeagueLabel => 'Liga de capital';
+
+  @override
+  String get capitalHallLevelLabel => 'Nível do Capital Hall';
+
+  @override
+  String get capitalDistrictsLabel => 'Distritos';
 
   @override
   String get clanLevelLabel => 'Nível do clã';

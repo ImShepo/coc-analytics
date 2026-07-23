@@ -4,7 +4,6 @@ import 'package:coc/l10n/locale_extensions.dart';
 import 'package:coc/config/theme/app_fonts.dart';
 import 'package:coc/domain/entities/clan.dart';
 import 'package:coc/domain/entities/player.dart' show Player;
-import 'package:coc/domain/entities/label.dart';
 import 'package:coc/domain/entities/member_list.dart';
 import 'package:coc/presentation/providers/clans/clan_info_provider.dart';
 import 'package:coc/presentation/screens/clan_member_screen.dart';
@@ -13,9 +12,11 @@ import 'package:coc/presentation/widgets/backgrounds/app_screen_background_varia
 import 'package:coc/presentation/widgets/clan/clan_hero_header.dart';
 import 'package:coc/presentation/widgets/clan/war/war_logs_list.dart';
 import 'package:coc/presentation/widgets/coc_network_image.dart';
+import 'package:coc/presentation/widgets/label_chip.dart';
 import 'package:coc/presentation/widgets/liquid_glass.dart';
 import 'package:coc/presentation/widgets/section_title.dart';
 import 'package:coc/presentation/widgets/stat_detail.dart';
+import 'package:coc/presentation/widgets/cache_status_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -53,7 +54,10 @@ class ClanScreenState extends ConsumerState<ClanScreen> {
   @override
   Widget build(BuildContext context) {
     final Clan? clan = ref.watch(
-      clanInfoProvider.select((clans) => clans[_cacheKey]),
+      clanInfoProvider.select((session) => session.byTag[_cacheKey]),
+    );
+    final clanMeta = ref.watch(
+      clanInfoProvider.select((session) => session.metaByTag[_cacheKey]),
     );
 
     if (clan == null) {
@@ -68,72 +72,108 @@ class ClanScreenState extends ConsumerState<ClanScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: AppScreenStack(
+      body: RefreshIndicator(
+        onRefresh: () =>
+            ref.read(clanInfoProvider.notifier).refreshClan(_cacheKey),
+        child: AppScreenStack(
         variant: AppScreenBackgroundVariant.clan,
         primary: Theme.of(context).colorScheme.onPrimary,
         secondary: Theme.of(context).colorScheme.secondary,
         child: CustomScrollView(
-            key: PageStorageKey<String>('clan-scroll-$_cacheKey'),
-            controller: _scrollController,
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              _CustomSliverAppBar(clan: clan),
-              SliverList(
-                delegate: SliverChildListDelegate(
-                  [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 16, 10, 0),
-                      child: _ClanDetails(
-                        clan: clan,
-                        viewerPlayer: widget.viewerPlayer,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          key: PageStorageKey<String>('clan-scroll-$_cacheKey'),
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
           ),
+          slivers: [
+            ..._ClanContentSlivers(
+              clan: clan,
+              viewerPlayer: widget.viewerPlayer,
+              isRefreshing: clanMeta?.isRefreshing ?? false,
+              refreshFailed: clanMeta?.refreshFailed ?? false,
+              fetchedAt: clanMeta?.fetchedAt,
+            ).build(context),
+          ],
+        ),
+        ),
       ),
     );
   }
 }
 
-class _ClanDetails extends StatelessWidget {
+class _ClanContentSlivers {
   final Clan clan;
   final Player? viewerPlayer;
+  final bool isRefreshing;
+  final bool refreshFailed;
+  final DateTime? fetchedAt;
 
-  const _ClanDetails({
+  const _ClanContentSlivers({
     required this.clan,
     this.viewerPlayer,
+    this.isRefreshing = false,
+    this.refreshFailed = false,
+    this.fetchedAt,
   });
 
-  @override
-  Widget build(BuildContext context) {
+  List<Widget> build(BuildContext context) {
     final l10n = context.l10n;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _ClanInfoSection(clan: clan),
-        const SizedBox(height: 16),
-        SectionTitle(title: l10n.stats),
-        const SizedBox(height: 8),
-        _ClanStatsCard(clan: clan),
-        const SizedBox(height: 24),
-        SectionTitle(title: l10n.warLog),
-        const SizedBox(height: 8),
-        _WarStats(clan: clan),
-        const SizedBox(height: 24),
-        SectionTitle(
-          title: l10n.clanMembersCount(clan.memberList.length),
-          bottomPadding: 6,
+
+    return [
+      if (isRefreshing || refreshFailed || fetchedAt != null)
+        SliverToBoxAdapter(
+          child: CacheStatusBanner(
+            isRefreshing: isRefreshing,
+            refreshFailed: refreshFailed,
+            fetchedAt: fetchedAt,
+          ),
         ),
-        _PlayersByClan(
-          memberList: clan.memberList,
-          viewerPlayer: viewerPlayer,
+      _CustomSliverAppBar(clan: clan),
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(10, 16, 10, 0),
+        sliver: SliverToBoxAdapter(child: _ClanInfoSection(clan: clan)),
+      ),
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(10, 16, 10, 0),
+        sliver: SliverToBoxAdapter(
+          child: SectionTitle(title: l10n.stats),
         ),
-        const SizedBox(height: 20),
-      ],
-    );
+      ),
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
+        sliver: SliverToBoxAdapter(child: _ClanStatsCard(clan: clan)),
+      ),
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(10, 24, 10, 0),
+        sliver: SliverToBoxAdapter(
+          child: SectionTitle(title: l10n.warLog),
+        ),
+      ),
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
+        sliver: SliverToBoxAdapter(child: _WarStats(clan: clan)),
+      ),
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(10, 24, 10, 6),
+        sliver: SliverToBoxAdapter(
+          child: SectionTitle(
+            title: l10n.clanMembersCount(clan.memberList.length),
+            bottomPadding: 0,
+          ),
+        ),
+      ),
+      SliverPadding(
+        padding: const EdgeInsets.only(bottom: 20),
+        sliver: SliverList.separated(
+          itemCount: clan.memberList.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemBuilder: (context, index) => _MemberTile(
+            player: clan.memberList[index],
+            viewerPlayer: viewerPlayer,
+          ),
+        ),
+      ),
+    ];
   }
 }
 
@@ -149,15 +189,26 @@ class _ClanInfoSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (clan.labels.isNotEmpty) ...[
+        if (clan.isFamilyFriendly || clan.labels.isNotEmpty) ...[
           SizedBox(
             height: 36,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: clan.labels.length,
+              itemCount: (clan.isFamilyFriendly ? 1 : 0) + clan.labels.length,
               separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (_, index) =>
-                  _LabelChip(label: clan.labels[index]),
+              itemBuilder: (_, index) {
+                if (clan.isFamilyFriendly && index == 0) {
+                  return const _FamilyFriendlyChip();
+                }
+                final labelIndex = clan.isFamilyFriendly ? index - 1 : index;
+                final label = clan.labels[labelIndex];
+                return LabelChip(
+                  name: label.name,
+                  iconUrl: label.iconUrls.medium.isNotEmpty
+                      ? label.iconUrls.medium
+                      : label.iconUrls.small,
+                );
+              },
             ),
           ),
           const SizedBox(height: 14),
@@ -182,9 +233,9 @@ class _ClanInfoSection extends StatelessWidget {
             ),
             child: Text(
               clan.description,
-              style: TextStyle(
-                fontFamily: AppFonts.light,
-                color: const Color(0xFF3B3B3B),
+              style: const TextStyle(
+                fontFamily: AppFonts.primary,
+                color: Color(0xFF3B3B3B),
                 fontSize: 11,
                 height: 1.45,
               ),
@@ -195,13 +246,12 @@ class _ClanInfoSection extends StatelessWidget {
   }
 }
 
-class _LabelChip extends StatelessWidget {
-  final Label label;
-
-  const _LabelChip({required this.label});
+class _FamilyFriendlyChip extends StatelessWidget {
+  const _FamilyFriendlyChip();
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
@@ -214,17 +264,10 @@ class _LabelChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CocNetworkImage(
-            url: label.iconUrls.medium,
-            width: 18,
-            height: 18,
-            fit: BoxFit.cover,
-            cacheWidth: 36,
-            borderRadius: BorderRadius.circular(6),
-          ),
+          Icon(Icons.family_restroom_rounded, size: 16, color: colorScheme.primary),
           const SizedBox(width: 6),
           Text(
-            label.name,
+            l10n.familyFriendly,
             style: TextStyle(
               fontFamily: AppFonts.primary,
               fontSize: 10,
@@ -304,6 +347,13 @@ class _ClanStatsCard extends StatelessWidget {
                     StatDetail(
                       title: l10n.clanType,
                       value: clan.type,
+                    ),
+                    _statDivider(colorScheme),
+                    StatDetail(
+                      title: l10n.familyFriendly,
+                      value: clan.isFamilyFriendly
+                          ? l10n.familyFriendlyYes
+                          : l10n.familyFriendlyNo,
                     ),
                     _statDivider(colorScheme),
                     StatDetail(
@@ -414,7 +464,7 @@ class _WarStats extends StatelessWidget {
                 l10n.warFrequencyLabel(clan.warFrequency),
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontFamily: AppFonts.light,
+                  fontFamily: AppFonts.primary,
                   color: colorScheme.onPrimary,
                   fontSize: 11,
                 ),
@@ -468,32 +518,6 @@ class _WarStatTile extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _PlayersByClan extends StatelessWidget {
-  final List<MemberList> memberList;
-  final Player? viewerPlayer;
-
-  const _PlayersByClan({
-    required this.memberList,
-    this.viewerPlayer,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.zero,
-      itemCount: memberList.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, index) =>
-          _MemberTile(
-            player: memberList[index],
-            viewerPlayer: viewerPlayer,
-          ),
     );
   }
 }

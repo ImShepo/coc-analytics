@@ -1,4 +1,5 @@
 import 'package:coc/config/helpers/clan_tag.dart';
+import 'package:coc/config/helpers/player_tag.dart';
 import 'package:coc/config/helpers/errors.dart';
 import 'package:coc/domain/datasources/players_datasource.dart';
 import 'package:coc/domain/entities/player.dart';
@@ -17,24 +18,35 @@ class PlayerDBDatasource extends PlayersDatasource {
   @override
   Future<Player> getPlayerById(String id) async {
     try {
-      final response = await dio.get('/players/%23$id');
-      if (response.statusCode != 200) {
-        throw handleDioException(response.statusCode!);
-      }
-
-      final playerResponse = PlayerResponse.fromJson(response.data);
-      final Player player = PlayerMapper.playerResponseToEntity(playerResponse);
-      return player;
+      final payload = await fetchPlayerPayload(id);
+      final playerResponse = PlayerResponse.fromJson(payload);
+      return PlayerMapper.playerResponseToEntity(playerResponse);
+    } on ApiException {
+      rethrow;
     } on DioException catch (e) {
-      final data = e.response?.data;
-      if (data is Map && data['message'] != null) {
-        throw data['message'] as String;
+      throw apiExceptionFromDio(e);
+    } catch (e) {
+      throw apiExceptionFromObject(e);
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> fetchPlayerPayload(String id) async {
+    try {
+      final tag = normalizePlayerTag(id);
+      final response = await dio.get(
+        '/players/${Uri.encodeComponent('#$tag')}',
+      );
+      if (response.statusCode != 200) {
+        throw apiExceptionFromStatusCode(response.statusCode ?? 500);
       }
-      final statusCode = e.response?.statusCode;
-      if (statusCode != null) {
-        throw handleDioException(statusCode);
-      }
-      throw 'Error de conexión. Revisa tu internet.';
+      return Map<String, dynamic>.from(response.data as Map);
+    } on ApiException {
+      rethrow;
+    } on DioException catch (e) {
+      throw apiExceptionFromDio(e);
+    } catch (e) {
+      throw apiExceptionFromObject(e);
     }
   }
 
@@ -51,5 +63,39 @@ class PlayerDBDatasource extends PlayersDatasource {
         .toList();
 
     return players;
+  }
+
+  @override
+  Future<bool> verifyPlayerToken(String id, String apiToken) async {
+    final token = apiToken
+        .trim()
+        .replaceAll(RegExp(r'\s+'), '')
+        .replaceAll(RegExp(r'[\u200B-\u200D\uFEFF]'), '');
+    if (token.isEmpty) {
+      throw 'Introduce el token de API del juego.';
+    }
+
+    final tag = id.replaceAll('#', '').trim().toUpperCase();
+    if (tag.isEmpty) {
+      throw 'Introduce tu etiqueta de jugador.';
+    }
+
+    try {
+      final response = await dio.post(
+        '/players/${Uri.encodeComponent('#$tag')}/verifytoken',
+        data: {'token': token},
+      );
+      final data = response.data;
+      if (data is Map && data['status'] == 'ok') {
+        return true;
+      }
+      return false;
+    } on ApiException {
+      rethrow;
+    } on DioException catch (e) {
+      throw apiExceptionFromDio(e);
+    } catch (e) {
+      throw apiExceptionFromObject(e);
+    }
   }
 }

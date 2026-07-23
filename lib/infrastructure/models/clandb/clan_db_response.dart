@@ -426,11 +426,54 @@ class Location {
 }
 
 class ClanCapital {
-  ClanCapital();
+  final int capitalHallLevel;
+  final List<ClanCapitalDistrict> districts;
 
-  factory ClanCapital.fromJson(Map<String, dynamic> json) => ClanCapital();
+  ClanCapital({
+    this.capitalHallLevel = 0,
+    this.districts = const [],
+  });
 
-  Map<String, dynamic> toJson() => {};
+  factory ClanCapital.fromJson(Map<String, dynamic> json) => ClanCapital(
+        capitalHallLevel: json['capitalHallLevel'] as int? ?? 0,
+        districts: (json['districts'] as List?)
+                ?.map(
+                  (e) =>
+                      ClanCapitalDistrict.fromJson(e as Map<String, dynamic>),
+                )
+                .toList() ??
+            const [],
+      );
+
+  Map<String, dynamic> toJson() => {
+        'capitalHallLevel': capitalHallLevel,
+        'districts': districts.map((d) => d.toJson()).toList(),
+      };
+}
+
+class ClanCapitalDistrict {
+  final int id;
+  final String name;
+  final int districtHallLevel;
+
+  ClanCapitalDistrict({
+    required this.id,
+    required this.name,
+    required this.districtHallLevel,
+  });
+
+  factory ClanCapitalDistrict.fromJson(Map<String, dynamic> json) =>
+      ClanCapitalDistrict(
+        id: json['id'] as int? ?? 0,
+        name: json['name'] as String? ?? '',
+        districtHallLevel: json['districtHallLevel'] as int? ?? 0,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'districtHallLevel': districtHallLevel,
+      };
 }
 
 

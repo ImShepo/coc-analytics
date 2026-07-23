@@ -1,8 +1,7 @@
-import 'package:coc/config/helpers/coc_unit_image.dart';
-import 'package:coc/l10n/locale_extensions.dart';
 import 'package:coc/config/theme/app_fonts.dart';
 import 'package:coc/domain/entities/player.dart';
-import 'package:coc/presentation/widgets/categories/coc_unit_image_widget.dart';
+import 'package:coc/l10n/locale_extensions.dart';
+import 'package:coc/presentation/widgets/coc_network_image.dart';
 import 'package:flutter/material.dart';
 
 class ComparePreviewCard extends StatelessWidget {
@@ -11,6 +10,12 @@ class ComparePreviewCard extends StatelessWidget {
   const ComparePreviewCard({super.key, required this.player});
 
   static const _labelShadows = AppFonts.onDarkSurfaceOutline;
+
+  String get _leagueIcon {
+    final medium = player.league.iconUrls.medium;
+    if (medium.isNotEmpty) return medium;
+    return player.league.iconUrls.small;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,8 +60,8 @@ class ComparePreviewCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _TroopPortrait(
-                        troopName: 'Barbarian',
+                      _PlayerPortrait(
+                        imageUrl: _leagueIcon,
                         accentColor: colorScheme.primary,
                       ),
                       const SizedBox(width: 8),
@@ -68,7 +73,7 @@ class ComparePreviewCard extends StatelessWidget {
                               child: RichText(
                                 textAlign: TextAlign.center,
                                 text: TextSpan(
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontFamily: AppFonts.primary,
                                     fontSize: 20,
                                     fontWeight: FontWeight.w500,
@@ -109,7 +114,7 @@ class ComparePreviewCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      _MysteryTroopPortrait(accentColor: const Color(0xFF6B4E71)),
+                      const _MysteryPortrait(accentColor: Color(0xFF7A5688)),
                     ],
                   ),
                   Padding(
@@ -142,12 +147,12 @@ class ComparePreviewCard extends StatelessWidget {
   }
 }
 
-class _TroopPortrait extends StatelessWidget {
-  final String troopName;
+class _PlayerPortrait extends StatelessWidget {
+  final String imageUrl;
   final Color accentColor;
 
-  const _TroopPortrait({
-    required this.troopName,
+  const _PlayerPortrait({
+    required this.imageUrl,
     required this.accentColor,
   });
 
@@ -163,56 +168,52 @@ class _TroopPortrait extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: CocUnitImageWidget(
-          name: troopName,
-          category: UnitCategory.troop,
+        child: CocNetworkImage(
+          url: imageUrl,
           width: 56,
           height: 56,
           fit: BoxFit.contain,
+          cacheWidth: 112,
+          errorWidget: ColoredBox(
+            color: accentColor.withValues(alpha: 0.2),
+            child: Icon(
+              Icons.shield_rounded,
+              color: accentColor,
+              size: 28,
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-class _MysteryTroopPortrait extends StatelessWidget {
+class _MysteryPortrait extends StatelessWidget {
   final Color accentColor;
 
-  const _MysteryTroopPortrait({required this.accentColor});
+  const _MysteryPortrait({required this.accentColor});
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        color: accentColor.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white38),
+      ),
       alignment: Alignment.center,
-      children: [
-        Opacity(
-          opacity: 0.45,
-          child: _TroopPortrait(
-            troopName: 'P.E.K.K.A',
-            accentColor: accentColor,
-          ),
+      child: const Text(
+        '?',
+        style: TextStyle(
+          fontFamily: AppFonts.primary,
+          color: Colors.white,
+          fontSize: 28,
+          fontWeight: FontWeight.w500,
+          height: 1,
         ),
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.25),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white38),
-          ),
-          alignment: Alignment.center,
-          child: const Text(
-            '?',
-            style: TextStyle(
-              fontFamily: AppFonts.primary,
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w500,
-              height: 1,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

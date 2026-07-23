@@ -313,6 +313,7 @@ class HeroEquipment {
   int maxLevel;
   String village;
   List<HeroEquipment>? equipment;
+  bool superTroopIsActive;
 
   HeroEquipment({
     required this.name,
@@ -320,6 +321,7 @@ class HeroEquipment {
     required this.maxLevel,
     required this.village,
     this.equipment,
+    this.superTroopIsActive = false,
   });
 
   factory HeroEquipment.fromJson(Map<String, dynamic> json) => HeroEquipment(
@@ -333,6 +335,7 @@ class HeroEquipment {
                 .map(HeroEquipment.fromJson)
                 .toList()
             : null,
+        superTroopIsActive: json["superTroopIsActive"] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -341,6 +344,7 @@ class HeroEquipment {
         "maxLevel": maxLevel,
         "village": village,
         "equipment": equipment?.map((e) => e.toJson()).toList(),
+        "superTroopIsActive": superTroopIsActive,
       };
 }
 
