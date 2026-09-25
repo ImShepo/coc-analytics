@@ -23,6 +23,9 @@ class AppScreenBackground extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return CustomPaint(
+      // Static and expensive: let the raster cache keep the painted picture.
+      isComplex: true,
+      willChange: false,
       painter: AppScreenBackgroundPainter(
         primary: primary ?? colorScheme.onPrimary,
         secondary: secondary ?? colorScheme.secondary,

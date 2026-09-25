@@ -1,8 +1,18 @@
+import 'dart:convert';
+
 import 'package:coc/config/helpers/building_catalog.dart';
 import 'package:coc/config/helpers/coc_unit_image.dart';
 import 'package:coc/config/helpers/troop_catalog.dart';
 import 'package:coc/presentation/models/category_unit.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+
+/// Runs on a background isolate: the payload is ~2 MB and decoding it on the
+/// UI thread stalls the first unit-detail open.
+Map<String, dynamic> _decodeStaticData(String body) {
+  final decoded = jsonDecode(body);
+  return decoded is Map<String, dynamic> ? decoded : <String, dynamic>{};
+}
 
 class UnitStaticRepository {
   UnitStaticRepository._();
@@ -21,11 +31,16 @@ class UnitStaticRepository {
 
   Future<Map<String, dynamic>> _fetch() async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>(
+      final response = await _dio.get<String>(
         _url,
-        options: Options(responseType: ResponseType.json),
+        options: Options(responseType: ResponseType.plain),
       );
-      _data = response.data;
+      final body = response.data;
+      if (body == null || body.isEmpty) {
+        _data = {};
+        return {};
+      }
+      _data = await compute(_decodeStaticData, body);
       return _data ?? {};
     } catch (_) {
       _data = {};

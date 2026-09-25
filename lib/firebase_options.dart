@@ -41,7 +41,7 @@ class DefaultFirebaseOptions {
     projectId: 'clash-of-clans-2fd27',
     storageBucket: 'clash-of-clans-2fd27.appspot.com',
     iosClientId:
-        '732642728426-leb04t0kgm481vfg620sev5p25ain7h8.apps.googleusercontent.com',
+        '732642728426-513ghmoojb8umcbov6p77hhqcqq1uarn.apps.googleusercontent.com',
     iosBundleId: 'com.imshepo.coc',
   );
 }
