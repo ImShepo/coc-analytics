@@ -84,7 +84,13 @@ class LinkedPlayerTagNotifier extends StateNotifier<AsyncValue<String?>> {
       return;
     }
 
-    state = const AsyncValue.loading();
+    // Prefer the local mirror immediately so GoRouter never sits on login
+    // or welcome while Firestore is still waking up.
+    final local = await _localProfileSnapshot();
+    if (generation != _bindGeneration) return;
+    state = AsyncValue.data(local.tag);
+    await _ref.read(linkDeferredProvider.notifier).syncFromProfile(local.deferred);
+
     try {
       final profile =
           await _ref.read(userProfileServiceProvider).loadAndMigrate(user.uid);
@@ -95,11 +101,18 @@ class LinkedPlayerTagNotifier extends StateNotifier<AsyncValue<String?>> {
           .syncFromProfile(profile.linkDeferred);
     } catch (e, st) {
       if (generation != _bindGeneration) return;
-      // Never block login on profile/Firestore errors.
       debugPrint('linkedPlayerTag load failed: $e\n$st');
-      state = const AsyncValue.data(null);
-      await _ref.read(linkDeferredProvider.notifier).syncFromProfile(false);
     }
+  }
+
+  Future<({String? tag, bool deferred})> _localProfileSnapshot() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(kLegacyLinkedPlayerTagKey);
+    final tag = (raw == null || raw.isEmpty)
+        ? null
+        : AuthService.playerTagForStorage(raw);
+    final deferred = prefs.getBool(kLegacyLinkDeferredKey) ?? false;
+    return (tag: tag, deferred: deferred);
   }
 
   Future<void> setTag(String rawTag) async {

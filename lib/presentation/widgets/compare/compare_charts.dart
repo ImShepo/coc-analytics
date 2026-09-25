@@ -784,6 +784,7 @@ class CompareTroopMatchTile extends StatelessWidget {
                   child: CocUnitImageWidget(
                     name: match.name,
                     category: match.category,
+                    troopGroup: match.group,
                     width: 44,
                     height: 44,
                     fit: BoxFit.contain,

@@ -1,5 +1,6 @@
 import 'package:coc/config/theme/app_fonts.dart';
 import 'package:coc/config/theme/app_text_theme.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 class AppTheme {
@@ -27,6 +28,15 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       fontFamily: AppFonts.primary,
+      // Zoom (the Android default) composites both routes through a saveLayer;
+      // these builders animate with plain transforms instead.
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
       colorScheme: colorScheme,
       textTheme: textTheme,
       primaryTextTheme: textTheme,
