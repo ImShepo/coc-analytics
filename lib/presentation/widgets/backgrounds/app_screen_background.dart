@@ -22,12 +22,15 @@ class AppScreenBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return CustomPaint(
-      painter: AppScreenBackgroundPainter(
-        primary: primary ?? colorScheme.onPrimary,
-        secondary: secondary ?? colorScheme.secondary,
-        mood: mood,
-        variant: variant,
+    return ColoredBox(
+      color: AppScreenBackgroundColors.base,
+      child: CustomPaint(
+        painter: AppScreenBackgroundPainter(
+          primary: primary ?? colorScheme.onPrimary,
+          secondary: secondary ?? colorScheme.secondary,
+          mood: mood,
+          variant: variant,
+        ),
       ),
     );
   }

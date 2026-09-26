@@ -29,9 +29,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
-      // Profile fetch should not freeze navigation. If it errored, treat as empty.
-      if ((tagAsync.isLoading && !tagAsync.hasError) ||
-          (deferredAsync.isLoading && !deferredAsync.hasError)) {
+      // Wait only while we have no profile snapshot yet. A signed-in user
+      // must not stay on welcome/login during that gap.
+      final profileReady = tagAsync.hasValue && deferredAsync.hasValue;
+      if (!profileReady) {
+        if (auth.valueOrNull != null &&
+            (loc == '/' || loc == '/login' || loc == '/register')) {
+          return '/home';
+        }
         return null;
       }
 

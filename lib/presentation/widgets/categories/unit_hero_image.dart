@@ -11,7 +11,11 @@ class UnitHeroImage extends StatelessWidget {
   final BorderRadius borderRadius;
   final Color backgroundColor;
   final EdgeInsets padding;
+
+  /// Lower filter quality for dense grids. Does not affect the Hero flight.
   final bool performanceMode;
+
+  final bool enableHero;
 
   const UnitHeroImage({
     super.key,
@@ -22,70 +26,52 @@ class UnitHeroImage extends StatelessWidget {
     this.backgroundColor = const Color(0x2E000000),
     this.padding = const EdgeInsets.all(6),
     this.performanceMode = false,
+    this.enableHero = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    final image = _ImageBody(
-      unit: unit,
-      player: player,
-      size: size,
-      borderRadius: borderRadius,
-      backgroundColor: backgroundColor,
-      padding: padding,
-      performanceMode: performanceMode,
-    );
-
-    if (performanceMode) {
-      return Material(
-        color: Colors.transparent,
-        child: SizedBox(width: size, height: size, child: image),
-      );
-    }
-
-    return Hero(
-      tag: unit.heroTag,
-      flightShuttleBuilder: (
-        flightContext,
-        animation,
-        flightDirection,
-        fromHeroContext,
-        toHeroContext,
-      ) {
-        return Material(
-          color: Colors.transparent,
-          child: SizedBox(
-            width: size,
-            height: size,
-            child: _ImageBody(
-              unit: unit,
-              player: player,
-              size: size,
-              borderRadius: borderRadius,
-              backgroundColor: backgroundColor,
-              padding: padding,
-              performanceMode: performanceMode,
-            ),
-          ),
-        );
-      },
-      child: Material(
-        color: Colors.transparent,
-        child: SizedBox(
-          width: size,
-          height: size,
-          child: _ImageBody(
-            unit: unit,
-            player: player,
-            size: size,
-            borderRadius: borderRadius,
-            backgroundColor: backgroundColor,
-            padding: padding,
-            performanceMode: performanceMode,
-          ),
+    final body = Material(
+      color: Colors.transparent,
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: _ImageBody(
+          unit: unit,
+          player: player,
+          size: size,
+          borderRadius: borderRadius,
+          backgroundColor: backgroundColor,
+          padding: padding,
+          performanceMode: performanceMode,
         ),
       ),
     );
+
+    if (!enableHero) return body;
+
+    return Hero(
+      tag: unit.heroTag,
+      flightShuttleBuilder: _flightShuttle,
+      child: body,
+    );
+  }
+
+  /// Scales the destination subtree instead of relaying it out on every frame,
+  /// so the flight costs one transform and never re-decodes the image.
+  static Widget _flightShuttle(
+    BuildContext flightContext,
+    Animation<double> animation,
+    HeroFlightDirection flightDirection,
+    BuildContext fromHeroContext,
+    BuildContext toHeroContext,
+  ) {
+    final endpoint = flightDirection == HeroFlightDirection.push
+        ? toHeroContext
+        : fromHeroContext;
+    final hero = endpoint.widget as Hero;
+
+    return FittedBox(fit: BoxFit.fill, child: hero.child);
   }
 }
 

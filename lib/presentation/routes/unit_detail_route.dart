@@ -3,7 +3,8 @@ import 'package:coc/presentation/models/category_unit.dart';
 import 'package:coc/presentation/screens/unit_detail_screen.dart';
 import 'package:flutter/material.dart';
 
-/// Ruta que mantiene la pantalla anterior y deja volar el Hero al volver.
+/// Opaque detail route: the Hero flight lives in the navigator overlay, so the
+/// previous screen must stop painting once the transition settles.
 class UnitDetailRoute extends PageRoute<void> {
   final CategoryUnit unit;
   final Player player;
@@ -20,13 +21,13 @@ class UnitDetailRoute extends PageRoute<void> {
   bool get maintainState => true;
 
   @override
-  Duration get transitionDuration => const Duration(milliseconds: 380);
+  bool get opaque => true;
 
   @override
-  Duration get reverseTransitionDuration => const Duration(milliseconds: 340);
+  Duration get transitionDuration => const Duration(milliseconds: 240);
 
   @override
-  bool get opaque => false;
+  Duration get reverseTransitionDuration => const Duration(milliseconds: 200);
 
   @override
   Widget buildPage(
@@ -44,26 +45,17 @@ class UnitDetailRoute extends PageRoute<void> {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
-    final fade = CurvedAnimation(
-      parent: animation,
-      curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
-    );
-
     return FadeTransition(
-      opacity: fade,
+      opacity: animation.drive(CurveTween(curve: Curves.fastOutSlowIn)),
       child: child,
     );
   }
 }
 
-void openUnitDetail(BuildContext context, CategoryUnit unit, {required Player player}) {
-  final cardContext = context;
-  Scrollable.ensureVisible(
-    cardContext,
-    duration: const Duration(milliseconds: 1),
-    alignment: 0.35,
-  );
-
+void openUnitDetail(
+  BuildContext context,
+  CategoryUnit unit, {
+  required Player player,
+}) {
   Navigator.of(context).push(UnitDetailRoute(unit: unit, player: player));
 }

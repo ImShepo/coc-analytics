@@ -105,7 +105,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get unlinkPlayerTitle => 'Délier le joueur';
 
   @override
-  String get unlinkPlayerMessage => 'Le lien avec votre joueur Clash of Clans sera supprimé. Vous pourrez ensuite lier un autre tag.';
+  String get unlinkPlayerMessage =>
+      'Le lien avec votre joueur Clash of Clans sera supprimé. Vous pourrez ensuite lier un autre tag.';
 
   @override
   String get cancel => 'Annuler';
@@ -114,10 +115,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get linkPlayerTitle => 'Liez votre joueur';
 
   @override
-  String get linkPlayerSubtitle => 'Entrez votre tag de joueur Clash of Clans pour charger vos statistiques. Si vous ne jouez pas, vous pouvez continuer sans lier.';
+  String get linkPlayerSubtitle =>
+      'Entrez votre tag de joueur Clash of Clans pour charger vos statistiques. Si vous ne jouez pas, vous pouvez continuer sans lier.';
 
   @override
-  String get linkPlayerAltHelp => 'Vous n\'avez pas le jeu ? Cherchez votre clan, choisissez votre nom et vérifiez avec l\'API Token. Si vous ne jouez pas, vous pouvez continuer sans lier.';
+  String get linkPlayerAltHelp =>
+      'Vous n\'avez pas le jeu ? Cherchez votre clan, choisissez votre nom et vérifiez avec l\'API Token. Si vous ne jouez pas, vous pouvez continuer sans lier.';
 
   @override
   String get linkPlayerTagPlaceholder => 'Tag du joueur (#ABC123)';
@@ -126,7 +129,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get linkPlayerTagRequired => 'Entrez votre tag de joueur.';
 
   @override
-  String get linkPlayerTagHelp => 'Dans Clash of Clans :\nOuvrez votre profil (icône du village), allez dans « Mon profil » et copiez le tag sous votre nom.';
+  String get linkPlayerTagHelp =>
+      'Dans Clash of Clans :\nOuvrez votre profil (icône du village), allez dans « Mon profil » et copiez le tag sous votre nom.';
 
   @override
   String get linkPlayerTokenPlaceholder => 'API Token';
@@ -135,16 +139,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get linkPlayerTokenRequired => 'Entrez l\'API Token du jeu.';
 
   @override
-  String get linkPlayerTokenHelp => 'Dans Clash of Clans :\nAllez dans Réglages → Plus d\'options, trouvez la section « API Token » et touchez « SHOW » pour l\'afficher et le copier.';
+  String get linkPlayerTokenHelp =>
+      'Dans Clash of Clans :\nAllez dans Réglages → Plus d\'options, trouvez la section « API Token » et touchez « SHOW » pour l\'afficher et le copier.';
 
   @override
   String get linkPlayerSeeGuide => 'Voir le guide';
 
   @override
-  String get linkPlayerTokenInvalid => 'Cet API Token n\'est pas valide pour ce tag. Générez-en un nouveau dans le jeu et réessayez.';
+  String get linkPlayerTokenInvalid =>
+      'Cet API Token n\'est pas valide pour ce tag. Générez-en un nouveau dans le jeu et réessayez.';
 
   @override
-  String get linkPlayerPickMemberFirst => 'Choisissez d\'abord votre joueur dans la liste.';
+  String get linkPlayerPickMemberFirst =>
+      'Choisissez d\'abord votre joueur dans la liste.';
 
   @override
   String linkPlayerVerifySelected(String name, String tag) {
@@ -167,16 +174,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get guestHomeLinkCta => 'Lier mon joueur';
 
   @override
-  String get guestHomeStatsHint => 'Liez votre joueur pour voir vos statistiques.';
+  String get guestHomeStatsHint =>
+      'Liez votre joueur pour voir vos statistiques.';
 
   @override
-  String get guestHomeCompareHint => 'Liez votre joueur pour comparer avec d\'autres.';
+  String get guestHomeCompareHint =>
+      'Liez votre joueur pour comparer avec d\'autres.';
 
   @override
   String get guestHomeClanHint => 'Liez votre joueur pour voir votre clan.';
 
   @override
-  String get guestHomeCategoriesHint => 'Liez votre joueur pour voir troupes, héros et plus.';
+  String get guestHomeCategoriesHint =>
+      'Liez votre joueur pour voir troupes, héros et plus.';
 
   @override
   String get linkPlayerModeTag => 'Par tag';
@@ -188,7 +198,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get linkPlayerSearchClan => 'Rechercher un clan';
 
   @override
-  String get linkPlayerClanQueryHint => 'Par nom : au moins 3 lettres. Par tag : incluez # (ex. #2GQYGPLOC).';
+  String get linkPlayerClanQueryHint =>
+      'Par nom : au moins 3 lettres. Par tag : incluez # (ex. #2GQYGPLOC).';
 
   @override
   String get linkPlayerPickClan => 'Choisissez votre clan';
@@ -213,7 +224,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get browseHomeTitle => 'Explorer';
 
   @override
-  String get browseHomeSubtitle => 'Recherchez des clans ou consultez n\'importe quel joueur. Liez le vôtre quand vous voulez voir vos statistiques.';
+  String get browseHomeSubtitle =>
+      'Recherchez des clans ou consultez n\'importe quel joueur. Liez le vôtre quand vous voulez voir vos statistiques.';
 
   @override
   String get browseLookupPlayerTitle => 'Consulter un joueur';
@@ -245,34 +257,43 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get dataRefreshFailed => 'Impossible d\'actualiser. Affichage des données enregistrées.';
+  String get dataRefreshFailed =>
+      'Impossible d\'actualiser. Affichage des données enregistrées.';
 
   @override
-  String get playerErrorForbiddenHint => 'Si vous voyez \"Forbidden\", mettez à jour COC_KEY dans le fichier .env avec une clé API valide de developer.clashofclans.com';
+  String get playerErrorForbiddenHint =>
+      'Si vous voyez \"Forbidden\", mettez à jour COC_KEY dans le fichier .env avec une clé API valide de developer.clashofclans.com';
 
   @override
-  String get apiErrorPlayerNotFound => 'Aucun joueur trouvé avec ce tag. Vérifiez qu\'il est correctement saisi.';
+  String get apiErrorPlayerNotFound =>
+      'Aucun joueur trouvé avec ce tag. Vérifiez qu\'il est correctement saisi.';
 
   @override
-  String get apiErrorBadRequest => 'Requête invalide. Vérifiez le tag et réessayez.';
+  String get apiErrorBadRequest =>
+      'Requête invalide. Vérifiez le tag et réessayez.';
 
   @override
-  String get apiErrorUnauthorized => 'Non autorisé. Vérifiez la configuration de l\'API.';
+  String get apiErrorUnauthorized =>
+      'Non autorisé. Vérifiez la configuration de l\'API.';
 
   @override
-  String get apiErrorForbidden => 'Accès refusé. Vérifiez votre clé API dans le fichier .env.';
+  String get apiErrorForbidden =>
+      'Accès refusé. Vérifiez votre clé API dans le fichier .env.';
 
   @override
-  String get apiErrorRateLimited => 'Trop de requêtes. Attendez un moment et réessayez.';
+  String get apiErrorRateLimited =>
+      'Trop de requêtes. Attendez un moment et réessayez.';
 
   @override
-  String get apiErrorServer => 'Le serveur est indisponible. Réessayez plus tard.';
+  String get apiErrorServer =>
+      'Le serveur est indisponible. Réessayez plus tard.';
 
   @override
   String get apiErrorNetwork => 'Erreur de connexion. Vérifiez votre internet.';
 
   @override
-  String get apiErrorUnexpected => 'Une erreur inattendue s\'est produite. Réessayez.';
+  String get apiErrorUnexpected =>
+      'Une erreur inattendue s\'est produite. Réessayez.';
 
   @override
   String get yourStats => 'Vos Statistiques';
@@ -311,7 +332,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get categorySpells => 'Sorts';
 
   @override
-  String get categoryCollapseHint => 'Appuyez sur un en-tête pour réduire ou développer une section.';
+  String get categoryCollapseHint =>
+      'Appuyez sur un en-tête pour réduire ou développer une section.';
 
   @override
   String get noTroopsRegistered => 'Aucune troupe enregistrée.';
@@ -323,7 +345,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get noBuildingsRegistered => 'Aucun bâtiment enregistré.';
 
   @override
-  String get noHeroesOrEquipmentRegistered => 'Aucun héros ni équipement enregistré.';
+  String get noHeroesOrEquipmentRegistered =>
+      'Aucun héros ni équipement enregistré.';
 
   @override
   String get equipment => 'Équipement';
@@ -371,7 +394,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get compareClearRecent => 'Effacer';
 
   @override
-  String get compareNoRecentMatches => 'Aucune correspondance dans l\'historique';
+  String get compareNoRecentMatches =>
+      'Aucune correspondance dans l\'historique';
 
   @override
   String get opponentDefaultName => 'Rival';
@@ -398,13 +422,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get search => 'Rechercher';
 
   @override
-  String get compareEnterTagPrompt => 'Saisissez le tag du rival dans la barre de recherche ci-dessus.';
+  String get compareEnterTagPrompt =>
+      'Saisissez le tag du rival dans la barre de recherche ci-dessus.';
 
   @override
   String get clanMates => 'CAMARADES DE CLAN';
 
   @override
-  String get compareNoClanHint => 'L\'API Supercell n\'expose pas la liste d\'amis du jeu. Sans clan, vous ne pouvez comparer que par tag.';
+  String get compareNoClanHint =>
+      'L\'API Supercell n\'expose pas la liste d\'amis du jeu. Sans clan, vous ne pouvez comparer que par tag.';
 
   @override
   String compareClanMatesHint(String clanName) {
@@ -598,7 +624,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get capitalRaidsEmpty => 'Aucun raid capitale récent.';
 
   @override
-  String get capitalRaidsLoadError => 'Impossible de charger l\'historique des raids.';
+  String get capitalRaidsLoadError =>
+      'Impossible de charger l\'historique des raids.';
 
   @override
   String get capitalRaidLoot => 'Butin total';
@@ -819,7 +846,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get whereTheyLead => 'OÙ IL MÈNE';
 
   @override
-  String get noClearAdvantages => 'Pas d\'avantage clair dans cette comparaison.';
+  String get noClearAdvantages =>
+      'Pas d\'avantage clair dans cette comparaison.';
 
   @override
   String get compareGroupTownHall => 'HDV';
@@ -855,7 +883,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get comparePlayersPromo => 'COMPARER LES JOUEURS';
 
   @override
-  String get comparePlayersSubtitle => 'Statistiques, graphiques et succès face à face.';
+  String get comparePlayersSubtitle =>
+      'Statistiques, graphiques et succès face à face.';
 
   @override
   String get warPreferenceIn => 'En guerre';
@@ -907,7 +936,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get compareStatsTitle => 'Comparer les statistiques';
 
   @override
-  String get compareStatsSubtitle => 'Graphiques, succès et troupes face à face.';
+  String get compareStatsSubtitle =>
+      'Graphiques, succès et troupes face à face.';
 
   @override
   String get donationsShort => 'Don.';
@@ -932,7 +962,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get warLogTabCapital => 'Capitale';
 
   @override
-  String get warLogPrivateHint => 'L\'historique détaillé des guerres est privé dans ce clan.';
+  String get warLogPrivateHint =>
+      'L\'historique détaillé des guerres est privé dans ce clan.';
 
   @override
   String get warLeagueLabel => 'Ligue de guerre';
@@ -959,7 +990,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get membersLabel => 'Membres';
 
   @override
-  String get builderWarComingSoon => 'Détails des guerres ouvrier bientôt disponibles.';
+  String get builderWarComingSoon =>
+      'Détails des guerres ouvrier bientôt disponibles.';
 
   @override
   String get capitalPointsLabel => 'Points capitale';
@@ -977,10 +1009,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get clanLevelLabel => 'Niveau du clan';
 
   @override
-  String get capitalRaidsComingSoon => 'Historique des raids capitale bientôt disponible.';
+  String get capitalRaidsComingSoon =>
+      'Historique des raids capitale bientôt disponible.';
 
   @override
-  String get warLogPrivateFooter => 'Les guerres individuelles ne sont pas visibles car le journal est privé.';
+  String get warLogPrivateFooter =>
+      'Les guerres individuelles ne sont pas visibles car le journal est privé.';
 
   @override
   String get unlockedStatus => 'Débloqué';
@@ -1021,7 +1055,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notUnlockedHeadline => 'Non débloqué';
 
   @override
-  String get allUpgradesCompleted => 'Vous avez terminé toutes les améliorations disponibles dans l\'API.';
+  String get allUpgradesCompleted =>
+      'Vous avez terminé toutes les améliorations disponibles dans l\'API.';
 
   @override
   String levelsToMax(int remaining, int max) {
@@ -1029,7 +1064,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get researchWhenUnlocked => 'Recherchez au laboratoire une fois cette unité débloquée.';
+  String get researchWhenUnlocked =>
+      'Recherchez au laboratoire une fois cette unité débloquée.';
 
   @override
   String get damagePerSec => 'Dégâts/s';

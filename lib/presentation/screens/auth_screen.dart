@@ -49,11 +49,21 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
     }
   }
 
+  Future<void> _openTerms() async {
+    final uri = Uri.parse(
+      'https://imshepo.github.io/coc-analytics/terms.html',
+    );
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final shortScreen = MediaQuery.sizeOf(context).height < 720;
+    final viewPadding = MediaQuery.paddingOf(context);
+    final topInset = viewPadding.top + (shortScreen ? 8 : 16);
+    final bottomInset = viewPadding.bottom + 24;
 
     return Scaffold(
       backgroundColor: const Color(0xffF2F2F2),
@@ -64,70 +74,90 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
               painter: MountainPainter(color: colorScheme.secondary),
             ),
           ),
-          SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Container(
-              height: MediaQuery.of(context).size.height,
-              padding: const EdgeInsets.symmetric(horizontal: 30),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Logo(title: widget.screenTitle, compact: shortScreen),
-                  widget.form,
-                  Labels(
-                    route: widget.route,
-                    title: widget.title,
-                    actionTitle: widget.actionTitle,
+          Positioned.fill(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
                   ),
-                  Column(
-                    children: [
-                      GoogleSignInButton(
-                        onPressed: _googleLoading ? null : _signInWithGoogle,
-                      ),
-                      if (_googleLoading)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 12),
-                          child: SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
+                  padding: EdgeInsets.fromLTRB(30, topInset, 30, bottomInset),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight - topInset - bottomInset,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Logo(
+                          title: widget.screenTitle,
+                          compact: shortScreen,
                         ),
-                      if (authError != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            authError!,
-                            style: TextStyle(
-                              color: colorScheme.error,
-                              fontSize: 12,
+                        widget.form,
+                        Labels(
+                          route: widget.route,
+                          title: widget.title,
+                          actionTitle: widget.actionTitle,
+                        ),
+                        Column(
+                          children: [
+                            GoogleSignInButton(
+                              onPressed:
+                                  _googleLoading ? null : _signInWithGoogle,
                             ),
-                            textAlign: TextAlign.center,
+                            if (_googleLoading)
+                              const Padding(
+                                padding: EdgeInsets.only(top: 12),
+                                child: SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                            if (authError != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(
+                                  authError!,
+                                  style: TextStyle(
+                                    color: colorScheme.error,
+                                    fontSize: 12,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                          ],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: TextButton(
+                            onPressed: _openTerms,
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(0, 48),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                            ),
+                            child: Text(
+                              l10n.termsAndConditions,
+                              style: TextStyle(
+                                color: colorScheme.primary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
                           ),
                         ),
-                    ],
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      launchUrl(
-                        Uri.parse(
-                          'https://imshepo.github.io/coc-analytics/terms.html',
-                        ),
-                        mode: LaunchMode.externalApplication,
-                      );
-                    },
-                    child: Text(
-                      l10n.termsAndConditions,
-                      style: TextStyle(
-                        color: colorScheme.primary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        decoration: TextDecoration.underline,
-                      ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ),
           const FloatingLanguageFab.topTrailing(),

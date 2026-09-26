@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#F7F7F5</color>
+    <!-- Same as AppScreenBackgroundColors.base — never show the OS black window. -->
+    <color name="window_background">#EDE8EB</color>
 </resources>

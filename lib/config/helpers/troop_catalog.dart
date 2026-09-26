@@ -90,6 +90,7 @@ class TroopCatalog {
     'Spirit Fox',
     'Angry Jelly',
     'Sneezy',
+    'Greedy Raven',
   };
 
   static const _darkElixirSpells = {
@@ -114,9 +115,17 @@ class TroopCatalog {
     'Revive Spell',
   };
 
+  static bool isPet(String name) {
+    if (_pets.contains(name)) return true;
+    final compact = name.toLowerCase().replaceAll('.', '').replaceAll(' ', '');
+    return _pets.any(
+      (pet) => pet.toLowerCase().replaceAll('.', '').replaceAll(' ', '') == compact,
+    );
+  }
+
   static TroopGroup troopGroupFor(String name, String village) {
     if (village == 'builderBase') return TroopGroup.builderBase;
-    if (_pets.contains(name)) return TroopGroup.pet;
+    if (isPet(name)) return TroopGroup.pet;
     if (_siegeMachines.contains(name)) return TroopGroup.siege;
     if (_darkElixirTroops.contains(name)) return TroopGroup.darkElixir;
     if (_elixirTroops.contains(name)) return TroopGroup.elixir;
