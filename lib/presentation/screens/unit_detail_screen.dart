@@ -63,7 +63,7 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppScreenBackgroundColors.base,
       body: AppScreenStack(
         variant: AppScreenBackgroundVariant.unit,
         child: CustomScrollView(

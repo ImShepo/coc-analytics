@@ -44,6 +44,7 @@ class MainApp extends ConsumerWidget {
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       theme: AppTheme().getTheme(),
+      themeMode: ThemeMode.light,
       locale: locale,
       supportedLocales: supportedAppLocales,
       localizationsDelegates: const [
