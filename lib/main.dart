@@ -3,22 +3,36 @@ import 'package:coc/config/theme/app_theme.dart';
 import 'package:coc/firebase_options.dart';
 import 'package:coc/l10n/app_localizations.dart';
 import 'package:coc/l10n/locale_provider.dart';
+import 'package:coc/presentation/widgets/backgrounds/app_screen_background_variant.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: AppScreenBackgroundColors.base,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
   // Keep troop icons warm without large GC pauses while scrolling.
   PaintingBinding.instance.imageCache.maximumSize = 120;
   PaintingBinding.instance.imageCache.maximumSizeBytes = 48 << 20;
-  await dotenv.load(fileName: _envFileName());
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  try {
+    await dotenv.load(fileName: _envFileName());
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (error, stackTrace) {
+    debugPrint('Startup init failed: $error\n$stackTrace');
+  }
   runApp(const ProviderScope(child: MainApp()));
 }
 
@@ -45,6 +59,12 @@ class MainApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme().getTheme(),
       themeMode: ThemeMode.light,
+      builder: (context, child) {
+        return ColoredBox(
+          color: AppScreenBackgroundColors.base,
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       locale: locale,
       supportedLocales: supportedAppLocales,
       localizationsDelegates: const [

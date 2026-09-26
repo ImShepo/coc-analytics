@@ -24,5 +24,10 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Impeller/Vulkan presents a solid dark surface on several OEM GPUs
+             after the first frame or a refresh. Skia until those devices are stable. -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
     </application>
 </manifest>
