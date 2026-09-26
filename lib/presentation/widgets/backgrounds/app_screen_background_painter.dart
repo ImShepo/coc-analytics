@@ -123,6 +123,12 @@ class AppScreenBackgroundPainter extends CustomPainter {
   void _paintSky(Canvas canvas, Size size) {
     final wash = mood ?? secondary;
     final rect = Offset.zero & size;
+    // Opaque floor: the gradient has translucent stops, and screens using this
+    // backdrop run on transparent Scaffolds.
+    canvas.drawRect(
+      rect,
+      Paint()..color = AppScreenBackgroundColors.base,
+    );
     canvas.drawRect(
       rect,
       Paint()

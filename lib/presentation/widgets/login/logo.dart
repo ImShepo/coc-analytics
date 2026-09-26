@@ -20,9 +20,11 @@ class Logo extends StatelessWidget {
         margin: EdgeInsets.only(top: compact ? 24 : 50),
         child: Column(
           children: [
-            const Image(
-              image: AssetImage('assets/images/coc-background.png'),
+            Image.asset(
+              'assets/images/coc-background.png',
               fit: BoxFit.cover,
+              // Source is 3312x1917 but it renders at 300 logical px.
+              cacheWidth: 900,
             ),
             SizedBox(height: compact ? 2 : 5),
             Text(

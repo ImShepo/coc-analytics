@@ -1,5 +1,7 @@
 import 'package:coc/config/theme/app_fonts.dart';
 import 'package:coc/config/theme/app_text_theme.dart';
+import 'package:coc/presentation/widgets/backgrounds/app_screen_background_variant.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 class AppTheme {
@@ -27,6 +29,19 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       fontFamily: AppFonts.primary,
+      // FadeForwards fades the outgoing route to opacity 0. Combined with
+      // custom PageRoutes (unit detail) that leaves a hole to the Android
+      // window — black in system dark mode. FadeUpwards keeps the previous
+      // page painted.
+      scaffoldBackgroundColor: AppScreenBackgroundColors.base,
+      canvasColor: AppScreenBackgroundColors.base,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
       colorScheme: colorScheme,
       textTheme: textTheme,
       primaryTextTheme: textTheme,

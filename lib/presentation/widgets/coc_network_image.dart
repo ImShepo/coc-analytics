@@ -107,6 +107,10 @@ class _CocNetworkImageState extends State<CocNetworkImage> {
       fit: widget.fit,
       cacheWidth: widget.cacheWidth,
       cacheHeight: widget.cacheHeight,
+      headers: const {
+        'Accept': 'image/webp,image/png,image/*;q=0.8',
+        'User-Agent': 'CoCAnalytics/1.0 (Flutter; dart:io)',
+      },
       filterQuality: widget.filterQuality,
       gaplessPlayback: true,
       // Prefer frameBuilder over loadingBuilder: loadingBuilder often

@@ -121,14 +121,16 @@ class CocUnitImage {
     required String village,
     TroopGroup? troopGroup,
   }) {
-    if (troopGroup == TroopGroup.pet) {
-      final slug = cleanedName(name);
+    final slug = cleanedName(name);
+    final isPet = troopGroup == TroopGroup.pet || TroopCatalog.isPet(name);
+    if (isPet) {
       return [
         '$_cdn/pets/$slug/icon.webp',
+        '$_cdn/pets/$slug.webp',
+        '$_cdn/troops/$slug/icon.webp',
       ];
     }
 
-    final slug = cleanedName(name);
     return [
       '$_cdn/troops/$slug/icon.webp',
     ];
