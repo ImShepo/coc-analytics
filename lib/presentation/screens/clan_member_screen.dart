@@ -66,6 +66,20 @@ class ClanMemberScreen extends StatelessWidget {
             backgroundColor: colorScheme.onPrimary,
             leadingWidth: 42,
             leading: const GlassBackLeading(),
+            centerTitle: false,
+            title: AppBarScreenTitle(member.name),
+            actions: [
+              if (_canCompare)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: GlassTextButton(
+                    label: l10n.compare,
+                    icon: Icons.compare_arrows_rounded,
+                    onPressed: () => _openCompare(context),
+                    style: GlassButtonStyle.ghostOnDark,
+                  ),
+                ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
@@ -113,13 +127,6 @@ class ClanMemberScreen extends StatelessWidget {
                               backgroundColor: Colors.white,
                             ),
                           ),
-                          if (_canCompare)
-                            Positioned(
-                              bottom: -6,
-                              child: _CompareHeroButton(
-                                onTap: () => _openCompare(context),
-                              ),
-                            ),
                         ],
                       ),
                     ),
@@ -248,18 +255,6 @@ class _ProfileHeader extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(
-            member.name,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: AppFonts.primary,
-              fontSize: 22,
-              height: 1.1,
-              fontWeight: FontWeight.w500,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-          ),
-          const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
             decoration: BoxDecoration(
@@ -708,26 +703,6 @@ class _DonationStat extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _CompareHeroButton extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _CompareHeroButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return GlassButton(
-      label: l10n.compare,
-      icon: Icons.compare_arrows_rounded,
-      onPressed: onTap,
-      style: GlassButtonStyle.primary,
-      height: 32,
-      borderRadius: BorderRadius.circular(20),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
     );
   }
 }

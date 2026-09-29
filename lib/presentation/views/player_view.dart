@@ -7,7 +7,10 @@ import 'package:coc/presentation/providers/auth/auth_provider.dart';
 import 'package:coc/presentation/widgets/floating_language_fab.dart';
 import 'package:coc/presentation/widgets/liquid_glass.dart';
 import 'package:coc/domain/entities/player.dart';
+import 'package:coc/presentation/providers/clans/current_war_provider.dart';
 import 'package:coc/presentation/providers/players/player_provider.dart';
+import 'package:coc/presentation/providers/auth/rival_provider.dart';
+import 'package:coc/presentation/widgets/war/war_now_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -77,6 +80,10 @@ class PlayerViewState extends ConsumerState<PlayerView>
         DateTime.now().difference(fetchedAt) > CachePolicy.resumeRefreshAfter;
     if (shouldRefresh) {
       ref.read(playerProvider.notifier).loadPlayer(playerId);
+      final clanTag = session.byTag[playerId]?.valueOrNull?.clan.tag;
+      if (clanTag != null && clanTag.isNotEmpty) {
+        ref.read(currentWarProvider.notifier).load(clanTag, force: true);
+      }
     }
   }
 
@@ -353,11 +360,66 @@ class _PlayerContent extends ConsumerStatefulWidget {
 
 class _PlayerContentState extends ConsumerState<_PlayerContent> {
   late final ScrollController _scrollController;
+  String? _loadedRivalTag;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    _loadWar();
+    Future.microtask(() {
+      if (!mounted) return;
+      ref.read(rivalProfileProvider.notifier).record(widget.player);
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _PlayerContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.player.clan.tag != widget.player.clan.tag) {
+      _loadWar();
+    }
+  }
+
+  void _loadWar() {
+    final tag = widget.player.clan.tag;
+    if (tag.isEmpty) return;
+    Future.microtask(
+      () => ref.read(currentWarProvider.notifier).load(normalizeClanTag(tag)),
+    );
+  }
+
+  Player? _pinnedRival() {
+    final tag = ref.watch(rivalProfileProvider).rivalTag;
+    if (tag == null || tag.isEmpty) return null;
+    if (_loadedRivalTag != tag) {
+      _loadedRivalTag = tag;
+      Future.microtask(() {
+        if (!mounted) return;
+        ref.read(playerProvider.notifier).loadPlayer(tag);
+      });
+    }
+    return ref
+        .watch(playerProvider)
+        .byTag[normalizePlayerTag(tag)]
+        ?.valueOrNull;
+  }
+
+  void _openCompare(Player player) {
+    final tag = ref.read(rivalProfileProvider).rivalTag;
+    final opponent = tag == null || tag.isEmpty
+        ? null
+        : ref.read(playerProvider).byTag[normalizePlayerTag(tag)]?.valueOrNull;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CompareScreen(
+          me: player,
+          initialOpponentTag: tag == null || tag.isEmpty ? null : tag,
+          initialOpponentName: opponent?.name,
+        ),
+      ),
+    );
   }
 
   @override
@@ -386,6 +448,24 @@ class _PlayerContentState extends ConsumerState<_PlayerContent> {
     final l10n = context.l10n;
     final player = widget.player;
     final colorScheme = Theme.of(context).colorScheme;
+    final playerKey = normalizePlayerTag(widget.playerId);
+    final pinnedRival = _pinnedRival();
+    final trophyHistory = [
+      for (final point in ref.watch(rivalProfileProvider).points) point.trophies,
+    ];
+
+    ref.listen(playerProvider, (previous, next) {
+      final loaded = next.byTag[playerKey]?.valueOrNull;
+      final before = previous?.byTag[playerKey]?.valueOrNull;
+      final meta = next.metaByTag[playerKey];
+      if (loaded == null || meta == null || meta.isRefreshing) return;
+      if (before != null &&
+          before.trophies == loaded.trophies &&
+          before.warStars == loaded.warStars) {
+        return;
+      }
+      ref.read(rivalProfileProvider.notifier).record(loaded);
+    });
 
     return Stack(
       fit: StackFit.expand,
@@ -399,9 +479,23 @@ class _PlayerContentState extends ConsumerState<_PlayerContent> {
           ),
         ),
         RefreshIndicator(
-          onRefresh: () => ref
-              .read(playerProvider.notifier)
-              .loadPlayer(widget.playerId, force: true),
+          onRefresh: () async {
+            await ref
+                .read(playerProvider.notifier)
+                .loadPlayer(widget.playerId, force: true);
+            final rivalTag = ref.read(rivalProfileProvider).rivalTag;
+            if (rivalTag != null && rivalTag.isNotEmpty) {
+              await ref
+                  .read(playerProvider.notifier)
+                  .loadPlayer(rivalTag, force: true);
+            }
+            final clanTag = widget.player.clan.tag;
+            if (clanTag.isNotEmpty) {
+              await ref
+                  .read(currentWarProvider.notifier)
+                  .load(clanTag, force: true);
+            }
+          },
           child: Padding(
             padding: const EdgeInsets.all(5),
             child: ListView(
@@ -432,6 +526,11 @@ class _PlayerContentState extends ConsumerState<_PlayerContent> {
                       ),
                     ],
                   )),
+                  if (player.clan.tag.isNotEmpty)
+                    WarNowCard(
+                      clanTag: normalizeClanTag(player.clan.tag),
+                      viewerTag: player.tag,
+                    ),
                   SectionTitle(
                     title: l10n.yourStats,
                     buttonText: l10n.seeAll,
@@ -463,29 +562,19 @@ class _PlayerContentState extends ConsumerState<_PlayerContent> {
                   SectionTitle(
                     title: l10n.compare,
                     buttonText: l10n.open,
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CompareScreen(me: player),
-                        ),
-                      );
-                    },
+                    onPressed: () => _openCompare(player),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CompareScreen(me: player),
-                        ),
-                      );
-                    },
+                    onTap: () => _openCompare(player),
                     child: CustomCard(
                       backgroundImage: 'assets/images/COC.jpeg',
-                      height: 180,
+                      height: trophyHistory.isEmpty ? 180 : 208,
                       opacity: 0.62,
-                      content: ComparePreviewCard(player: player),
+                      content: ComparePreviewCard(
+                        player: player,
+                        opponent: pinnedRival,
+                        trophyHistory: trophyHistory,
+                      ),
                     ),
                   ),
                   SectionTitle(

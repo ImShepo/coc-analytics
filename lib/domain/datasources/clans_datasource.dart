@@ -1,5 +1,6 @@
 import 'package:coc/domain/entities/clan.dart';
 import 'package:coc/domain/entities/clan_war_log.dart';
+import 'package:coc/domain/entities/current_clan_war.dart';
 
 abstract class ClansDatasource {
   Future<Clan> getClanById(String id);
@@ -14,4 +15,6 @@ abstract class ClansDatasource {
     String clanTag, {
     int limit = 10,
   });
+
+  Future<CurrentClanWar> getCurrentWar(String clanTag);
 }

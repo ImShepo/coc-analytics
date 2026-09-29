@@ -1280,6 +1280,18 @@ abstract class AppLocalizations {
   /// **'Distritos enemigos'**
   String get capitalRaidDistricts;
 
+  /// No description provided for @capitalRaidRanking.
+  ///
+  /// In es, this message translates to:
+  /// **'Ranking del finde'**
+  String get capitalRaidRanking;
+
+  /// No description provided for @capitalRaidMemberAttacks.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} ataques'**
+  String capitalRaidMemberAttacks(int count);
+
   /// No description provided for @achievementsHomeVillage.
   ///
   /// In es, this message translates to:
@@ -2197,6 +2209,180 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'TH {level}'**
   String townHallShort(int level);
+
+  /// No description provided for @warNowTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahora'**
+  String get warNowTitle;
+
+  /// No description provided for @warNowNotInWar.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin guerra en curso'**
+  String get warNowNotInWar;
+
+  /// No description provided for @warNowPrivate.
+  ///
+  /// In es, this message translates to:
+  /// **'El registro de guerra es privado.'**
+  String get warNowPrivate;
+
+  /// No description provided for @warNowLoadError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cargar la guerra.'**
+  String get warNowLoadError;
+
+  /// No description provided for @warNowPreparation.
+  ///
+  /// In es, this message translates to:
+  /// **'Preparación'**
+  String get warNowPreparation;
+
+  /// No description provided for @warNowInWar.
+  ///
+  /// In es, this message translates to:
+  /// **'En guerra'**
+  String get warNowInWar;
+
+  /// No description provided for @warNowEnded.
+  ///
+  /// In es, this message translates to:
+  /// **'Guerra terminada'**
+  String get warNowEnded;
+
+  /// No description provided for @warNowStartsIn.
+  ///
+  /// In es, this message translates to:
+  /// **'Empieza en {time}'**
+  String warNowStartsIn(String time);
+
+  /// No description provided for @warNowEndsIn.
+  ///
+  /// In es, this message translates to:
+  /// **'Termina en {time}'**
+  String warNowEndsIn(String time);
+
+  /// No description provided for @warNowAttacksLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} ataques restantes'**
+  String warNowAttacksLeft(int count);
+
+  /// No description provided for @warNowYourRank.
+  ///
+  /// In es, this message translates to:
+  /// **'Puesto {rank} de {total}'**
+  String warNowYourRank(int rank, int total);
+
+  /// No description provided for @warNowStarsLine.
+  ///
+  /// In es, this message translates to:
+  /// **'{stars} estrellas · {destruction}%'**
+  String warNowStarsLine(int stars, String destruction);
+
+  /// No description provided for @warRoomTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Sala de guerra'**
+  String get warRoomTitle;
+
+  /// No description provided for @warRoomYourAttacks.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus ataques'**
+  String get warRoomYourAttacks;
+
+  /// No description provided for @warRoomNoAttacksYet.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no atacas'**
+  String get warRoomNoAttacksYet;
+
+  /// No description provided for @warRoomAttackLine.
+  ///
+  /// In es, this message translates to:
+  /// **'{stars} estrellas · {destruction}%'**
+  String warRoomAttackLine(int stars, String destruction);
+
+  /// No description provided for @warRoomClanAttacks.
+  ///
+  /// In es, this message translates to:
+  /// **'Ataques del clan'**
+  String get warRoomClanAttacks;
+
+  /// No description provided for @warRoomRanking.
+  ///
+  /// In es, this message translates to:
+  /// **'Ranking'**
+  String get warRoomRanking;
+
+  /// No description provided for @warRoomYourPlace.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu puesto'**
+  String get warRoomYourPlace;
+
+  /// No description provided for @warRoomAttacksUsed.
+  ///
+  /// In es, this message translates to:
+  /// **'{used}/{total} ataques'**
+  String warRoomAttacksUsed(int used, int total);
+
+  /// No description provided for @rivalCardTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Rival'**
+  String get rivalCardTitle;
+
+  /// No description provided for @rivalCardEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Fija un rival desde Comparar'**
+  String get rivalCardEmpty;
+
+  /// No description provided for @rivalPinLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Fijar'**
+  String get rivalPinLabel;
+
+  /// No description provided for @rivalUnpinLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Desfijar'**
+  String get rivalUnpinLabel;
+
+  /// No description provided for @rivalCardPin.
+  ///
+  /// In es, this message translates to:
+  /// **'Fijar rival'**
+  String get rivalCardPin;
+
+  /// No description provided for @rivalCardPinned.
+  ///
+  /// In es, this message translates to:
+  /// **'Rival fijado'**
+  String get rivalCardPinned;
+
+  /// No description provided for @rivalCardUnpin.
+  ///
+  /// In es, this message translates to:
+  /// **'Desfijar rival'**
+  String get rivalCardUnpin;
+
+  /// No description provided for @rivalCardUnpinned.
+  ///
+  /// In es, this message translates to:
+  /// **'Rival quitado'**
+  String get rivalCardUnpinned;
+
+  /// No description provided for @rivalCardTrophies.
+  ///
+  /// In es, this message translates to:
+  /// **'{you} vs {them} copas'**
+  String rivalCardTrophies(int you, int them);
 }
 
 class _AppLocalizationsDelegate

@@ -75,6 +75,8 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
             backgroundColor: colorScheme.onPrimary,
             leadingWidth: 42,
             leading: const GlassBackLeading(),
+            centerTitle: false,
+            title: AppBarScreenTitle(unit.name),
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
@@ -111,18 +113,6 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    unit.name,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: AppFonts.primary,
-                      color: colorScheme.onPrimary,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w500,
-                      height: 1.1,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
                   Wrap(
                     alignment: WrapAlignment.center,
                     spacing: 8,

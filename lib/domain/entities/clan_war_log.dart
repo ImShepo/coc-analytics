@@ -38,6 +38,20 @@ class ClanWarLogSide {
   });
 }
 
+class CapitalRaidMember {
+  final String tag;
+  final String name;
+  final int attacks;
+  final int capitalResourcesLooted;
+
+  const CapitalRaidMember({
+    required this.tag,
+    required this.name,
+    required this.attacks,
+    required this.capitalResourcesLooted,
+  });
+}
+
 class CapitalRaidSeason {
   final String state;
   final String startTime;
@@ -48,6 +62,7 @@ class CapitalRaidSeason {
   final int enemyDistrictsDestroyed;
   final int offensiveReward;
   final int defensiveReward;
+  final List<CapitalRaidMember> members;
 
   const CapitalRaidSeason({
     required this.state,
@@ -59,5 +74,14 @@ class CapitalRaidSeason {
     required this.enemyDistrictsDestroyed,
     required this.offensiveReward,
     required this.defensiveReward,
+    this.members = const [],
   });
+
+  List<CapitalRaidMember> get lootRanking {
+    final ranked = [...members];
+    ranked.sort(
+      (a, b) => b.capitalResourcesLooted.compareTo(a.capitalResourcesLooted),
+    );
+    return ranked;
+  }
 }

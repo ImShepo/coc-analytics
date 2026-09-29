@@ -1,7 +1,7 @@
 name: coc
 description: "CoC Analytics — clan and player stats for Clash of Clans."
 publish_to: 'none'
-version: 1.0.0+9
+version: 1.0.0+10
 
 environment:
   sdk: '>=3.2.6 <4.0.0'

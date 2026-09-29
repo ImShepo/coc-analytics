@@ -2,19 +2,29 @@ import 'package:coc/config/theme/app_fonts.dart';
 import 'package:coc/domain/entities/player.dart';
 import 'package:coc/l10n/locale_extensions.dart';
 import 'package:coc/presentation/widgets/coc_network_image.dart';
+import 'package:coc/presentation/widgets/war/trophy_sparkline.dart';
 import 'package:flutter/material.dart';
 
 class ComparePreviewCard extends StatelessWidget {
   final Player player;
+  final Player? opponent;
+  final List<int> trophyHistory;
 
-  const ComparePreviewCard({super.key, required this.player});
+  const ComparePreviewCard({
+    super.key,
+    required this.player,
+    this.opponent,
+    this.trophyHistory = const [],
+  });
 
   static const _labelShadows = AppFonts.onDarkSurfaceOutline;
 
-  String get _leagueIcon {
-    final medium = player.league.iconUrls.medium;
+  String get _leagueIcon => _leagueIconOf(player);
+
+  String _leagueIconOf(Player value) {
+    final medium = value.league.iconUrls.medium;
     if (medium.isNotEmpty) return medium;
-    return player.league.iconUrls.small;
+    return value.league.iconUrls.small;
   }
 
   @override
@@ -90,9 +100,13 @@ class ComparePreviewCard extends StatelessWidget {
                                       text: l10n.versusSeparator,
                                       style: const TextStyle(color: Colors.white70),
                                     ),
-                                    const TextSpan(
-                                      text: '?',
-                                      style: TextStyle(color: Colors.white54),
+                                    TextSpan(
+                                      text: opponent?.name ?? '?',
+                                      style: TextStyle(
+                                        color: opponent == null
+                                            ? Colors.white54
+                                            : Colors.white,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -100,13 +114,18 @@ class ComparePreviewCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              l10n.pickOpponent,
+                              opponent == null
+                                  ? l10n.pickOpponent
+                                  : l10n.rivalCardTrophies(
+                                      player.trophies,
+                                      opponent!.trophies,
+                                    ),
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 fontFamily: AppFonts.primary,
                                 color: Colors.white,
-                                fontSize: 9,
-                                letterSpacing: 0.4,
+                                fontSize: 11,
+                                letterSpacing: 0.3,
                                 shadows: _labelShadows,
                               ),
                             ),
@@ -114,7 +133,13 @@ class ComparePreviewCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const _MysteryPortrait(accentColor: Color(0xFF7A5688)),
+                      if (opponent == null || _leagueIconOf(opponent!).isEmpty)
+                        const _MysteryPortrait(accentColor: Color(0xFF7A5688))
+                      else
+                        _PlayerPortrait(
+                          imageUrl: _leagueIconOf(opponent!),
+                          accentColor: const Color(0xFF7A5688),
+                        ),
                     ],
                   ),
                   Padding(
@@ -125,18 +150,21 @@ class ComparePreviewCard extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.25),
                     ),
                   ),
-                  Text(
-                    l10n.comparePreviewSubtitle,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontFamily: AppFonts.primary,
-                      color: Colors.white,
-                      fontSize: 8,
-                      letterSpacing: 0.6,
-                      fontWeight: FontWeight.w500,
-                      shadows: _labelShadows,
-                    ),
-                  ),
+                  if (trophyHistory.isEmpty)
+                    Text(
+                      l10n.comparePreviewSubtitle,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontFamily: AppFonts.primary,
+                        color: Colors.white,
+                        fontSize: 8,
+                        letterSpacing: 0.6,
+                        fontWeight: FontWeight.w500,
+                        shadows: _labelShadows,
+                      ),
+                    )
+                  else
+                    TrophySparkline(values: trophyHistory),
                 ],
               ),
             ),
