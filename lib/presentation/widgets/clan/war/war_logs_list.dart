@@ -1,3 +1,4 @@
+import 'package:coc/config/helpers/player_tag.dart';
 import 'package:coc/config/theme/app_fonts.dart';
 import 'package:coc/domain/entities/clan.dart';
 import 'package:coc/domain/entities/clan_war_log.dart';
@@ -13,8 +14,9 @@ enum _WarLogTab { home, builder, capital }
 
 class WarLogsList extends StatefulWidget {
   final Clan clan;
+  final String? viewerTag;
 
-  const WarLogsList({super.key, required this.clan});
+  const WarLogsList({super.key, required this.clan, this.viewerTag});
 
   @override
   State<WarLogsList> createState() => _WarLogsListState();
@@ -68,7 +70,10 @@ class _WarLogsListState extends State<WarLogsList> {
     return switch (selectedWarLog) {
       _WarLogTab.home => HomeVillageWarLog(clan: clan),
       _WarLogTab.builder => BuilderBaseWarLog(clan: clan),
-      _WarLogTab.capital => ClanCapitalWarLog(clan: clan),
+      _WarLogTab.capital => ClanCapitalWarLog(
+          clan: clan,
+          viewerTag: widget.viewerTag,
+        ),
     };
   }
 }
@@ -436,8 +441,9 @@ class BuilderBaseWarLog extends StatelessWidget {
 
 class ClanCapitalWarLog extends ConsumerStatefulWidget {
   final Clan clan;
+  final String? viewerTag;
 
-  const ClanCapitalWarLog({super.key, required this.clan});
+  const ClanCapitalWarLog({super.key, required this.clan, this.viewerTag});
 
   @override
   ConsumerState<ClanCapitalWarLog> createState() => _ClanCapitalWarLogState();
@@ -532,8 +538,33 @@ class _ClanCapitalWarLogState extends ConsumerState<ClanCapitalWarLog> {
                 footer: l10n.capitalRaidsEmpty,
               );
             }
+            CapitalRaidSeason? rankedSeason;
+            for (final season in seasons) {
+              if (season.members.isNotEmpty) {
+                rankedSeason = season;
+                break;
+              }
+            }
             return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (rankedSeason != null) ...[
+                  Text(
+                    l10n.capitalRaidRanking,
+                    style: AppFonts.sectionTitle(),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _formatCocDate(rankedSeason.startTime),
+                    style: AppFonts.cardLabel(fontSize: 11),
+                  ),
+                  const SizedBox(height: 8),
+                  _CapitalRanking(
+                    season: rankedSeason,
+                    viewerTag: widget.viewerTag,
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 for (var i = 0; i < seasons.length; i++) ...[
                   if (i > 0) const SizedBox(height: 8),
                   _RaidSeasonCard(season: seasons[i]),
@@ -579,6 +610,177 @@ class _RaidSeasonCard extends StatelessWidget {
           '${season.enemyDistrictsDestroyed}',
         ),
       ],
+    );
+  }
+}
+
+List<CapitalRaidMember> _rankedMembers(CapitalRaidSeason season) {
+  final ranked = [...season.members];
+  ranked.sort((a, b) {
+    final byLoot = b.capitalResourcesLooted.compareTo(a.capitalResourcesLooted);
+    if (byLoot != 0) return byLoot;
+    final byAttacks = b.attacks.compareTo(a.attacks);
+    if (byAttacks != 0) return byAttacks;
+    return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+  });
+  return ranked;
+}
+
+class _CapitalRanking extends StatelessWidget {
+  final CapitalRaidSeason season;
+  final String? viewerTag;
+
+  const _CapitalRanking({required this.season, this.viewerTag});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
+    final ranked = _rankedMembers(season);
+    final viewerId = viewerTag == null ? '' : normalizePlayerTag(viewerTag!);
+    var mineIndex = -1;
+    if (viewerId.isNotEmpty) {
+      mineIndex = ranked.indexWhere(
+        (member) => normalizePlayerTag(member.tag) == viewerId,
+      );
+    }
+    final mine = mineIndex == -1 ? null : ranked[mineIndex];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (mine != null) ...[
+          Container(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  '${mineIndex + 1}',
+                  style: TextStyle(
+                    fontFamily: AppFonts.primary,
+                    fontSize: 28,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.warRoomYourPlace,
+                        style: AppFonts.sectionTitle(fontSize: 11),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.warNowYourRank(mineIndex + 1, ranked.length),
+                        style: const TextStyle(
+                          fontFamily: AppFonts.primary,
+                          fontSize: 14,
+                          color: Color(0xFF2C2C2C),
+                        ),
+                      ),
+                      Text(
+                        '${mine.capitalResourcesLooted}',
+                        style: AppFonts.cardLabel(fontSize: 12),
+                      ),
+                      Text(
+                        l10n.capitalRaidMemberAttacks(mine.attacks),
+                        style: AppFonts.cardLabel(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        for (var i = 0; i < ranked.length; i++)
+          _CapitalRankRow(
+            rank: i + 1,
+            member: ranked[i],
+            highlighted: i == mineIndex,
+          ),
+      ],
+    );
+  }
+}
+
+class _CapitalRankRow extends StatelessWidget {
+  final int rank;
+  final CapitalRaidMember member;
+  final bool highlighted;
+
+  const _CapitalRankRow({
+    required this.rank,
+    required this.member,
+    required this.highlighted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: highlighted
+            ? colorScheme.primary.withValues(alpha: 0.16)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: highlighted
+              ? colorScheme.primary.withValues(alpha: 0.35)
+              : Colors.grey.shade200,
+        ),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 28,
+            child: Text(
+              '$rank',
+              style: TextStyle(
+                fontFamily: AppFonts.primary,
+                fontSize: 14,
+                color: highlighted ? colorScheme.primary : const Color(0xFF2C2C2C),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              member.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontFamily: AppFonts.primary,
+                fontSize: 13,
+                color: Color(0xFF2C2C2C),
+              ),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${member.capitalResourcesLooted}',
+                style: AppFonts.cardLabel(fontSize: 12),
+              ),
+              Text(
+                l10n.capitalRaidMemberAttacks(member.attacks),
+                style: AppFonts.cardLabel(fontSize: 10),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

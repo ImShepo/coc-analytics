@@ -2,6 +2,7 @@ import 'package:coc/config/helpers/clan_tag.dart';
 import 'package:coc/domain/datasources/clans_datasource.dart';
 import 'package:coc/domain/entities/clan.dart';
 import 'package:coc/domain/entities/clan_war_log.dart';
+import 'package:coc/domain/entities/current_clan_war.dart';
 import 'package:coc/domain/repositories/clans_repository.dart';
 import 'package:coc/infrastructure/cache/cache_policy.dart';
 import 'package:coc/infrastructure/cache/disk_entity_cache.dart';
@@ -16,6 +17,9 @@ class ClanRepositoryImpl extends ClansRepository {
   static final _searchCache = MemoryCache<List<Clan>>();
   static final _warLogCache = MemoryCache<List<ClanWarLogEntry>>();
   static final _raidCache = MemoryCache<List<CapitalRaidSeason>>();
+  static final _currentWarCache = MemoryCache<CurrentClanWar>(
+    ttl: CachePolicy.currentWarTtl,
+  );
 
   ClanRepositoryImpl(this.datasource);
 
@@ -114,5 +118,21 @@ class ClanRepositoryImpl extends ClansRepository {
         await datasource.getCapitalRaidSeasons(clanTag, limit: limit);
     _raidCache.set(cacheKey, seasons);
     return seasons;
+  }
+
+  @override
+  Future<CurrentClanWar> getCurrentWar(
+    String clanTag, {
+    bool force = false,
+  }) async {
+    final cacheKey = normalizeClanTag(clanTag);
+    if (!force) {
+      final cached = _currentWarCache.get(cacheKey);
+      if (cached != null) return cached;
+    }
+
+    final war = await datasource.getCurrentWar(clanTag);
+    _currentWarCache.set(cacheKey, war);
+    return war;
   }
 }

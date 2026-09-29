@@ -65,6 +65,8 @@ class StatsScreen extends StatelessWidget {
             backgroundColor: colorScheme.onPrimary,
             leadingWidth: 42,
             leading: const GlassBackLeading(),
+            centerTitle: false,
+            title: AppBarScreenTitle(l10n.statsTitle),
             actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 8),
@@ -77,18 +79,6 @@ class StatsScreen extends StatelessWidget {
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 48, bottom: 14, right: 16),
-              title: Text(
-                player.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: AppFonts.primary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
-              ),
               background: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -104,10 +94,6 @@ class StatsScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                  ),
-                  const Align(
-                    alignment: Alignment(0, -0.15),
-                    child: _StatsTitleLabel(),
                   ),
                 ],
               ),
@@ -334,23 +320,6 @@ class StatsScreen extends StatelessWidget {
       default:
         return preference;
     }
-  }
-}
-
-class _StatsTitleLabel extends StatelessWidget {
-  const _StatsTitleLabel();
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      context.l10n.statsTitle,
-      style: const TextStyle(
-        fontFamily: AppFonts.light,
-        color: Colors.white70,
-        fontSize: 10,
-        letterSpacing: 1.6,
-      ),
-    );
   }
 }
 

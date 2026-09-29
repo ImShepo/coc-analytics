@@ -200,12 +200,35 @@ class GlassButton extends StatelessWidget {
   }
 }
 
+/// Screen title used in every header, beside the back button.
+class AppBarScreenTitle extends StatelessWidget {
+  final String text;
+
+  const AppBarScreenTitle(this.text, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(
+        fontFamily: AppFonts.primary,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: Colors.white,
+      ),
+    );
+  }
+}
+
 /// Compact text/icon control (app bar actions, section links, search).
 class GlassTextButton extends StatelessWidget {
   final String label;
   final IconData? icon;
   final VoidCallback? onPressed;
   final GlassButtonStyle style;
+  final bool selected;
 
   const GlassTextButton({
     super.key,
@@ -213,12 +236,16 @@ class GlassTextButton extends StatelessWidget {
     this.icon,
     this.onPressed,
     this.style = GlassButtonStyle.accent,
+    this.selected = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final colors = _resolveColors(colorScheme, style);
+    final colors = _resolveColors(
+      colorScheme,
+      selected ? GlassButtonStyle.primary : style,
+    );
 
     return Material(
       color: Colors.transparent,

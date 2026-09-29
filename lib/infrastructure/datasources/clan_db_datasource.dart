@@ -1,12 +1,16 @@
 import 'package:coc/config/helpers/clan_tag.dart';
+import 'package:coc/config/helpers/errors.dart';
 import 'package:coc/domain/datasources/clans_datasource.dart';
 import 'package:coc/domain/entities/clan.dart';
 import 'package:coc/domain/entities/clan_war_log.dart';
+import 'package:coc/domain/entities/current_clan_war.dart';
 import 'package:coc/infrastructure/mappers/clan_mapper.dart';
 import 'package:coc/infrastructure/models/clandb/clan_db_response.dart';
 import 'package:coc/infrastructure/models/clandb/clan_details.dart';
 import 'package:coc/infrastructure/models/clandb/clan_war_models.dart';
+import 'package:coc/infrastructure/models/clandb/current_war_models.dart';
 import 'package:coc/infrastructure/network/dio_client.dart';
+import 'package:dio/dio.dart';
 
 class ClanDBDatasource extends ClansDatasource {
   final dio = DioClient.instance;
@@ -94,5 +98,26 @@ class ClanDBDatasource extends ClansDatasource {
     return CapitalRaidSeasonsResponse.fromJson(
       response.data as Map<String, dynamic>,
     ).items;
+  }
+
+  @override
+  Future<CurrentClanWar> getCurrentWar(String clanTag) async {
+    try {
+      final response = await dio.get(
+        '/clans/${clanTagToApiPath(clanTag)}/currentwar',
+      );
+      if (response.statusCode != 200) {
+        throw apiExceptionFromStatusCode(response.statusCode ?? 500);
+      }
+      return CurrentClanWarParser.fromJson(
+        Map<String, dynamic>.from(response.data as Map),
+      );
+    } on ApiException {
+      rethrow;
+    } on DioException catch (error) {
+      throw apiExceptionFromDio(error);
+    } catch (error) {
+      throw apiExceptionFromObject(error);
+    }
   }
 }

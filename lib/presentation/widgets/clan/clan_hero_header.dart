@@ -104,31 +104,6 @@ class ClanHeroHeader extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        clan.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontFamily: AppFonts.primary,
-                          color: Colors.white,
-                          fontSize: 22,
-                          height: 1.05,
-                          fontWeight: FontWeight.w500,
-                          shadows: [
-                            Shadow(
-                              color: Color(0xCC000000),
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
-                            ),
-                            Shadow(
-                              color: Color(0x66000000),
-                              blurRadius: 16,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
                         clan.tag,
                         style: TextStyle(
                           fontFamily: AppFonts.light,

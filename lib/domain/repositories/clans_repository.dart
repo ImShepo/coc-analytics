@@ -1,5 +1,6 @@
 import 'package:coc/domain/entities/clan.dart';
 import 'package:coc/domain/entities/clan_war_log.dart';
+import 'package:coc/domain/entities/current_clan_war.dart';
 
 abstract class ClansRepository {
   Future<Clan> getClanById(String id);
@@ -20,4 +21,7 @@ abstract class ClansRepository {
     String clanTag, {
     int limit = 10,
   });
+
+  /// [force] skips the 60s memory cache. Never written to disk.
+  Future<CurrentClanWar> getCurrentWar(String clanTag, {bool force = false});
 }
