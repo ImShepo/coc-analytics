@@ -14,7 +14,6 @@ import 'package:coc/presentation/widgets/clan/war/war_logs_list.dart';
 import 'package:coc/presentation/widgets/coc_network_image.dart';
 import 'package:coc/presentation/widgets/label_chip.dart';
 import 'package:coc/presentation/widgets/liquid_glass.dart';
-import 'package:coc/presentation/widgets/section_title.dart';
 import 'package:coc/presentation/widgets/stat_detail.dart';
 import 'package:coc/presentation/widgets/cache_status_banner.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +34,17 @@ class ClanScreen extends ConsumerStatefulWidget {
 class ClanScreenState extends ConsumerState<ClanScreen> {
   late final String _cacheKey;
   final ScrollController _scrollController = ScrollController();
+  final Set<String> _expandedSections = {'stats'};
+
+  void _toggleSection(String id) {
+    setState(() {
+      if (_expandedSections.contains(id)) {
+        _expandedSections.remove(id);
+      } else {
+        _expandedSections.add(id);
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -92,6 +102,8 @@ class ClanScreenState extends ConsumerState<ClanScreen> {
               isRefreshing: clanMeta?.isRefreshing ?? false,
               refreshFailed: clanMeta?.refreshFailed ?? false,
               fetchedAt: clanMeta?.fetchedAt,
+              expandedSections: _expandedSections,
+              onToggleSection: _toggleSection,
             ).build(context),
           ],
         ),
@@ -107,6 +119,8 @@ class _ClanContentSlivers {
   final bool isRefreshing;
   final bool refreshFailed;
   final DateTime? fetchedAt;
+  final Set<String> expandedSections;
+  final void Function(String id) onToggleSection;
 
   const _ClanContentSlivers({
     required this.clan,
@@ -114,12 +128,16 @@ class _ClanContentSlivers {
     this.isRefreshing = false,
     this.refreshFailed = false,
     this.fetchedAt,
+    required this.expandedSections,
+    required this.onToggleSection,
   });
 
   List<Widget> build(BuildContext context) {
     final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return [
+      _CustomSliverAppBar(clan: clan),
       if (isRefreshing || refreshFailed || fetchedAt != null)
         SliverToBoxAdapter(
           child: CacheStatusBanner(
@@ -128,52 +146,174 @@ class _ClanContentSlivers {
             fetchedAt: fetchedAt,
           ),
         ),
-      _CustomSliverAppBar(clan: clan),
       SliverPadding(
         padding: const EdgeInsets.fromLTRB(10, 16, 10, 0),
         sliver: SliverToBoxAdapter(child: _ClanInfoSection(clan: clan)),
       ),
       SliverPadding(
-        padding: const EdgeInsets.fromLTRB(10, 16, 10, 0),
+        padding: const EdgeInsets.fromLTRB(0, 8, 0, 28),
         sliver: SliverToBoxAdapter(
-          child: SectionTitle(title: l10n.stats),
-        ),
-      ),
-      SliverPadding(
-        padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
-        sliver: SliverToBoxAdapter(child: _ClanStatsCard(clan: clan)),
-      ),
-      SliverPadding(
-        padding: const EdgeInsets.fromLTRB(10, 24, 10, 0),
-        sliver: SliverToBoxAdapter(
-          child: SectionTitle(title: l10n.warLog),
-        ),
-      ),
-      SliverPadding(
-        padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
-        sliver: SliverToBoxAdapter(child: _WarStats(clan: clan)),
-      ),
-      SliverPadding(
-        padding: const EdgeInsets.fromLTRB(10, 24, 10, 6),
-        sliver: SliverToBoxAdapter(
-          child: SectionTitle(
-            title: l10n.clanMembersCount(clan.memberList.length),
-            bottomPadding: 0,
-          ),
-        ),
-      ),
-      SliverPadding(
-        padding: const EdgeInsets.only(bottom: 20),
-        sliver: SliverList.separated(
-          itemCount: clan.memberList.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 8),
-          itemBuilder: (context, index) => _MemberTile(
-            player: clan.memberList[index],
-            viewerPlayer: viewerPlayer,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _ClanFoldableSection(
+                title: l10n.stats,
+                color: colorScheme.primary,
+                expanded: expandedSections.contains('stats'),
+                onToggle: () => onToggleSection('stats'),
+                child: _ClanStatsCard(clan: clan),
+              ),
+              const SizedBox(height: 18),
+              _ClanFoldableSection(
+                title: l10n.warLog,
+                color: const Color(0xFFE65100),
+                expanded: expandedSections.contains('war'),
+                onToggle: () => onToggleSection('war'),
+                child: _WarStats(
+                  clan: clan,
+                  viewerTag: viewerPlayer?.tag,
+                ),
+              ),
+              const SizedBox(height: 18),
+              _ClanFoldableSection(
+                title: l10n.membersLabel,
+                color: const Color(0xFF1565C0),
+                count: clan.memberList.length,
+                expanded: expandedSections.contains('members'),
+                onToggle: () => onToggleSection('members'),
+                child: Column(
+                  children: [
+                    for (var i = 0; i < clan.memberList.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 8),
+                      _MemberTile(
+                        player: clan.memberList[i],
+                        viewerPlayer: viewerPlayer,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
     ];
+  }
+}
+
+class _ClanFoldableSection extends StatelessWidget {
+  final String title;
+  final Color color;
+  final int? count;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final Widget child;
+
+  const _ClanFoldableSection({
+    required this.title,
+    required this.color,
+    this.count,
+    required this.expanded,
+    required this.onToggle,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onToggle,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 2, 6, 2),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 4,
+                          height: 18,
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            title.toUpperCase(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: AppFonts.primary,
+                              color: colorScheme.onPrimary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                        ),
+                        if (count != null) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '$count',
+                              style: TextStyle(
+                                fontFamily: AppFonts.primary,
+                                color: color,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: expanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    child: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 20,
+                      color: colorScheme.onPrimary.withValues(alpha: 0.55),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          alignment: Alignment.topCenter,
+          clipBehavior: Clip.hardEdge,
+          child: expanded
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: child,
+                )
+              : const SizedBox(width: double.infinity),
+        ),
+      ],
+    );
   }
 }
 
@@ -254,24 +394,22 @@ class _FamilyFriendlyChip extends StatelessWidget {
     final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.35)),
-      ),
+    return LiquidGlassSurface(
+      borderRadius: BorderRadius.circular(20),
+      tintColor: colorScheme.primary,
+      tintStrength: 0.22,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.family_restroom_rounded, size: 16, color: colorScheme.primary),
-          const SizedBox(width: 6),
+          const Icon(Icons.family_restroom_rounded, size: 16, color: Colors.white),
+          const SizedBox(width: 5),
           Text(
             l10n.familyFriendly,
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: AppFonts.primary,
-              fontSize: 10,
-              color: colorScheme.onPrimary,
+              fontSize: 11,
+              color: Colors.white,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -387,8 +525,9 @@ class _ClanStatsCard extends StatelessWidget {
 
 class _WarStats extends StatelessWidget {
   final Clan clan;
+  final String? viewerTag;
 
-  const _WarStats({required this.clan});
+  const _WarStats({required this.clan, this.viewerTag});
 
   @override
   Widget build(BuildContext context) {
@@ -471,7 +610,7 @@ class _WarStats extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            WarLogsList(clan: clan),
+            WarLogsList(clan: clan, viewerTag: viewerTag),
           ],
         ),
       ),
@@ -674,18 +813,8 @@ class _CustomSliverAppBar extends StatelessWidget {
       ),
       leadingWidth: 42,
       leading: const GlassBackLeading(),
-      title: Text(
-        clan.name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          fontFamily: AppFonts.primary,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: Colors.white,
-          shadows: AppFonts.onDarkSurfaceOutline,
-        ),
-      ),
+      centerTitle: false,
+      title: AppBarScreenTitle(clan.name),
       flexibleSpace: FlexibleSpaceBar(
         collapseMode: CollapseMode.pin,
         background: Padding(

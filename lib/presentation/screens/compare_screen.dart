@@ -11,6 +11,7 @@ import 'package:coc/l10n/app_localizations.dart';
 import 'package:coc/l10n/catalog_l10n.dart';
 import 'package:coc/l10n/locale_extensions.dart';
 import 'package:coc/presentation/providers/clans/clan_info_provider.dart';
+import 'package:coc/presentation/providers/auth/rival_provider.dart';
 import 'package:coc/presentation/providers/players/player_provider.dart';
 import 'package:coc/presentation/widgets/backgrounds/app_screen_stack.dart';
 import 'package:coc/presentation/widgets/backgrounds/app_screen_background_variant.dart';
@@ -100,6 +101,34 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
             .loadClan(normalizeClanTag(widget.me.clan.tag)),
       );
     }
+  }
+
+  bool _tagsMatch(String? pinned, String? opponent) {
+    if (pinned == null || pinned.isEmpty || opponent == null || opponent.isEmpty) {
+      return false;
+    }
+    return normalizePlayerTag(pinned) == normalizePlayerTag(opponent);
+  }
+
+  Future<void> _togglePinnedRival() async {
+    final opponent = _opponentTag;
+    if (opponent == null || opponent.isEmpty) return;
+    final wasPinned = _tagsMatch(
+      ref.read(rivalProfileProvider).rivalTag,
+      opponent,
+    );
+    final notifier = ref.read(rivalProfileProvider.notifier);
+    final saved = wasPinned
+        ? await notifier.unpinRival()
+        : await notifier.pinRival(opponent);
+    if (!mounted || !saved) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          wasPinned ? context.l10n.rivalCardUnpinned : context.l10n.rivalCardPinned,
+        ),
+      ),
+    );
   }
 
   void _onTabChanged() {
@@ -268,6 +297,10 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
+    final rivalPinned = _tagsMatch(
+      ref.watch(rivalProfileProvider).rivalTag,
+      _opponentTag,
+    );
     final youColor = colorScheme.primary;
     // Rival purple tuned for white cards + white text on dark app bar.
     const themColor = Color(0xFF7A5688);
@@ -379,18 +412,23 @@ class _CompareScreenState extends ConsumerState<CompareScreen>
             expandedHeight: 210,
             pinned: true,
             backgroundColor: hasComparison ? moodDark : colorScheme.onPrimary,
-            title: Text(
-              l10n.compareTitle,
-              style: const TextStyle(
-                fontFamily: AppFonts.primary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
-              ),
-            ),
+            title: AppBarScreenTitle(l10n.compareTitle),
             centerTitle: false,
             leadingWidth: 42,
             leading: const GlassBackLeading(),
+            actions: [
+              if (_opponentTag != null && _opponentTag!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: GlassTextButton(
+                    label: rivalPinned ? l10n.rivalUnpinLabel : l10n.rivalPinLabel,
+                    icon: rivalPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                    selected: rivalPinned,
+                    style: GlassButtonStyle.ghostOnDark,
+                    onPressed: _togglePinnedRival,
+                  ),
+                ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.parallax,
               background: Stack(

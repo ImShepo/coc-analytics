@@ -638,6 +638,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get capitalRaidDistricts => 'Distritos enemigos';
 
   @override
+  String get capitalRaidRanking => 'Ranking del finde';
+
+  @override
+  String capitalRaidMemberAttacks(int count) {
+    return '$count ataques';
+  }
+
+  @override
   String get achievementsHomeVillage => 'Logros · Ayuntamiento';
 
   @override
@@ -1157,5 +1165,108 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String townHallShort(int level) {
     return 'TH $level';
+  }
+
+  @override
+  String get warNowTitle => 'Ahora';
+
+  @override
+  String get warNowNotInWar => 'Sin guerra en curso';
+
+  @override
+  String get warNowPrivate => 'El registro de guerra es privado.';
+
+  @override
+  String get warNowLoadError => 'No se pudo cargar la guerra.';
+
+  @override
+  String get warNowPreparation => 'Preparación';
+
+  @override
+  String get warNowInWar => 'En guerra';
+
+  @override
+  String get warNowEnded => 'Guerra terminada';
+
+  @override
+  String warNowStartsIn(String time) {
+    return 'Empieza en $time';
+  }
+
+  @override
+  String warNowEndsIn(String time) {
+    return 'Termina en $time';
+  }
+
+  @override
+  String warNowAttacksLeft(int count) {
+    return '$count ataques restantes';
+  }
+
+  @override
+  String warNowYourRank(int rank, int total) {
+    return 'Puesto $rank de $total';
+  }
+
+  @override
+  String warNowStarsLine(int stars, String destruction) {
+    return '$stars estrellas · $destruction%';
+  }
+
+  @override
+  String get warRoomTitle => 'Sala de guerra';
+
+  @override
+  String get warRoomYourAttacks => 'Tus ataques';
+
+  @override
+  String get warRoomNoAttacksYet => 'Aún no atacas';
+
+  @override
+  String warRoomAttackLine(int stars, String destruction) {
+    return '$stars estrellas · $destruction%';
+  }
+
+  @override
+  String get warRoomClanAttacks => 'Ataques del clan';
+
+  @override
+  String get warRoomRanking => 'Ranking';
+
+  @override
+  String get warRoomYourPlace => 'Tu puesto';
+
+  @override
+  String warRoomAttacksUsed(int used, int total) {
+    return '$used/$total ataques';
+  }
+
+  @override
+  String get rivalCardTitle => 'Rival';
+
+  @override
+  String get rivalCardEmpty => 'Fija un rival desde Comparar';
+
+  @override
+  String get rivalPinLabel => 'Fijar';
+
+  @override
+  String get rivalUnpinLabel => 'Desfijar';
+
+  @override
+  String get rivalCardPin => 'Fijar rival';
+
+  @override
+  String get rivalCardPinned => 'Rival fijado';
+
+  @override
+  String get rivalCardUnpin => 'Desfijar rival';
+
+  @override
+  String get rivalCardUnpinned => 'Rival quitado';
+
+  @override
+  String rivalCardTrophies(int you, int them) {
+    return '$you vs $them copas';
   }
 }

@@ -78,6 +78,19 @@ class CapitalRaidSeasonParser {
       enemyDistrictsDestroyed: json['enemyDistrictsDestroyed'] as int? ?? 0,
       offensiveReward: json['offensiveReward'] as int? ?? 0,
       defensiveReward: json['defensiveReward'] as int? ?? 0,
+      members: (json['members'] as List? ?? const [])
+          .whereType<Map>()
+          .map((member) {
+            final jsonMember = Map<String, dynamic>.from(member);
+            return CapitalRaidMember(
+              tag: jsonMember['tag'] as String? ?? '',
+              name: jsonMember['name'] as String? ?? '',
+              attacks: jsonMember['attacks'] as int? ?? 0,
+              capitalResourcesLooted:
+                  jsonMember['capitalResourcesLooted'] as int? ?? 0,
+            );
+          })
+          .toList(),
     );
   }
 }
